@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<project name="Template" default="all" basedir=".">
+  <property name="src.dir" value="src"/>
+  <property name="bin.dir" value="bin"/>
+  <property name="jar.name" value="Template.jar"/>
+  <property name="main.class" value="MainClass"/>
+
+  <target name="all" depends="build.jar"/>
+
+  <!-- exewrapでexe化するときに用いる -->
+  <!-- exeファイルの作成 -->
+  <!--
+  <property name="exe.name" value="Template.exe"/>
+  <target name="build.exe" depends="build.jar">
+    <exec executable="exewrap" failonerror="true">
+      <arg line="-d file-description"/>
+      <arg line="-g -t 1.5 -v 1.0.0.0 -e SINGLE;NOLOG -j ${jar.name} -o ${exe.name}"/>
+    </exec>
+  </target>
+  -->
+
+  <!-- jarファイルの作成 -->
+  <target name="build.jar" depends="build.class">
+    <jar jarfile="${jar.name}">
+      <fileset dir="${bin.dir}"/>
+      <fileset dir="./" includes="resource/"/>
+      <manifest>
+        <attribute name="Main-Class" value="${main.class}"/>
+      </manifest>
+    </jar>
+  </target>
+
+  <!-- javaファイルのコンパイル -->
+  <target name="build.class">
+    <javac srcdir="${src.dir}" destdir="${bin.dir}" encoding="utf-8" includeantruntime="false"/>
+  </target>
+
+  <!-- オブジェクトのクリーン -->
+  <target name="clean">
+    <!-- <delete file="${jar.name}"/> -->
+    <delete file="${jar.name}"/>
+    <delete>
+      <fileset dir="${bin.dir}" includes="*.class"/>
+    </delete>
+  </target>
+  <target name="objclean">
+    <delete>
+      <fileset dir="${bin.dir}" includes="*.class"/>
+    </delete>
+  </target>
+</project>
