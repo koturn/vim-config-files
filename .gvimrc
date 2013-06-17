@@ -16,12 +16,6 @@ NeoBundleLazy 'movewin.vim', {
       \  'autoload': {'commands' : 'MoveWin'}
       \}
 
-NeoBundleLazy 'scrnmode.vim', {
-      \  'type' : 'nosync',
-      \  'base' : $DOTVIM . '/norepository-plugins',
-      \  'autoload' : {'commands' : ['SM', 'ScreenMode', 'FullScreen']}
-      \}
-
 NeoBundleLazy 'thinca/vim-fontzoom', {
       \  'autoload' : {
       \    'commands' : 'Fontzoom',
@@ -43,6 +37,7 @@ filetype plugin indent on
 " ------------------------------------------------------------
 " set lines=90 columns=200
 set guioptions=    " Hide menubar and toolbar.
+set winaltkeys=no  " Turns of the Alt key bindings to the gui menu
 
 " Change cursor color depending on state of IME.
 if has('multi_byte_ime') || has('xim')
@@ -56,27 +51,28 @@ if has('win16') || has('win32') || has('win64')
   set guifont=Consolas:h9 guifontwide=MS_Gothic:h9
 
   " Setting for printing.
-  " set printoptions=number:y,header:0,syntax:y,left:5pt,right:5pt,top:10pt,bottom:10pt
-  " set printfont=Consolas:h9
+  set printoptions=number:y,header:0,syntax:y,left:5pt,right:5pt,top:10pt,bottom:10pt
+  set printfont=Consolas:h9
 
   " Setting for menubar
-  " set langmenu=ja_jp.utf-8
-  " source $VIMRUNTIME/delmenu.vim
-  " source $VIMRUNTIME/menu.vim
+  set langmenu=ja_jp.utf-8
+  source $VIMRUNTIME/delmenu.vim
+  source $VIMRUNTIME/menu.vim
 endif
+
 " Singleton
-" if has('gui_running') && argc()
-"   let s:running_vim_list = filter(
-"         \  split(serverlist(), '\n'),
-"         \  'v:val !=? v:servername')
-"   if !empty(s:running_vim_list)
-"     silent execute '!start gvim'
-"           \  '--servername' s:running_vim_list[0]
-"           \  '--remote-tab-silent' join(argv(), ' ')
-"     qa!
-"   endif
-"   unlet s:running_vim_list
-" endif
+if has('clientserver') && has('gui_running') && argc()
+  let s:running_vim_list = filter(
+        \  split(serverlist(), '\n'),
+        \  'v:val !=? v:servername')
+  if !empty(s:running_vim_list)
+    silent execute '!start gvim'
+          \  '--servername' s:running_vim_list[0]
+          \  '--remote-tab-silent' join(argv(), ' ')
+    qa!
+  endif
+  unlet s:running_vim_list
+endif
 
 
 " ------------------------------------------------------------
@@ -115,13 +111,6 @@ hi IndentGuidesEven guibg=#6666ff
 " ------------------------------------------------------------
 " Others {{{
 " ------------------------------------------------------------
-" FullScreen
-noremap  <silent> <F11>   :<C-u>SM 4<CR>
-noremap! <silent> <F11>   <Esc>:SM 4<CR>
-noremap  <silent> <M-F11> :<C-u>SM 4<CR>
-noremap! <silent> <M-F11> <Esc>:SM 4<CR>
-
-
 if exists('&transparency')
   gui
   set transparency=215

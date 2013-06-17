@@ -13,7 +13,6 @@
 " ------------------------------------------------------------
 " Variables {{{
 " ------------------------------------------------------------
-set nocompatible
 " Variables to identify environment.
 let s:is_windows =  has('win16') || has('win32') || has('win64')
 let s:is_cygwin  =  has('win32unix')
@@ -191,7 +190,7 @@ NeoBundleLazy 'rhysd/endwize.vim', {
       \  'autoload' : {
       \    'filetypes' : ['lua', 'ruby', 'sh', 'zsh', 'vb', 'vbnet', 'aspvbs', 'vim'],
       \}}
- let g:endwize_add_info_filetypes = ['ruby', 'c', 'cpp']
+let g:endwize_add_info_filetypes = ['ruby', 'c', 'cpp']
 "imap <silent><CR> <CR><Plug>DiscretionaryEnd
 
 NeoBundleLazy 'ruby-matchit', {
@@ -273,8 +272,8 @@ let g:quickrun_config = {
 "      \}}
 
 NeoBundleLazy 'klen/python-mode', {
-        \  'autoload' : {'filetypes' : 'python'}
-        \}
+      \  'autoload' : {'filetypes' : 'python'}
+      \}
 " Do not use the folding of python-mode.
 let g:pymode_folding = 0
 
@@ -413,7 +412,6 @@ set whichwrap=b,s,h,l,<,>,[,]
 set vb t_vb=
 " Use vim in secure.
 set secure
-
 " Swap file.
 " set directory=~/vimfiles/swap/
 set noswapfile
@@ -432,33 +430,12 @@ set shiftwidth=2
 set tabstop=2
 set expandtab
 " set cindent
-
+"
 " Show line number.
 set number
-" Toggle the line number which was displayed at local windows.
-"""""" if v:version >= 703
-function! g:toggleNumber()
-  if &number
-    setl relativenumber
-  else
-    setl number
-  endif
-endfunction
-nnoremap <silent> <Leader>l :call g:toggleNumber()<CR>
-"""""" endif
-
-" Highlight cursor position. (Verticaly and horizontaly)
 if !s:is_cui
   set cursorline cursorcolumn
 endif
-function! g:toggleCursorHighlight()
-  if !&cursorline || !&cursorcolumn
-    setl cursorline cursorcolumn
-  else
-    setl nocursorline nocursorcolumn
-  endif
-endfunction
-nnoremap <silent> <Leader>h :call g:toggleCursorHighlight()<CR>
 
 function! g:toggleTabSpace(width)
   let s:i = 0
@@ -473,10 +450,10 @@ function! g:toggleTabSpace(width)
   let &ts = a:width
   if &expandtab
     set noexpandtab
-    exec '%s/' . s:spaces . '/\t/e'
+    silent! exec '%s/' . s:spaces . '/\t/g'
   else
     set expandtab
-    exec '%s/\t/' . s:spaces . '/e'
+    silent! exec '%s/\t/' . s:spaces . '/g'
   endif
   unlet s:spaces
 endfunction
@@ -495,10 +472,47 @@ endif
 " Delete spaces and tabs when you save files.
 " autocmd MyAutoCmd BufWritePre * :%s/[ \t]\+$//e
 
-command! DeleteTrailingWhitespace %s/[ \t]\+$//e
+command! DeleteTrailingWhitespace %s/[ \t]\+$//g
 command! -nargs=1 -complete=file Rename f <args> | call delete(expand('#'))
 command! -nargs=1 -complete=file E tabedit <args>
 command! Q tabclose <args>
+"""""" if v:version >= 703
+" Toggle the line number which was displayed at local windows.
+command! ToggleNumber
+      \ if &relativenumber
+      \|  setl norelativenumber
+      \|else
+      \|  setl relativenumber
+      \|endif
+nnoremap <silent> <Leader>l :ToggleNumber<CR>
+"""""" endif
+
+" Highlight cursor position. (Verticaly and horizontaly)
+command! ToggleCursorHighlight
+      \ if !&cursorline || !&cursorcolumn
+      \|  setl cursorline cursorcolumn
+      \|else
+      \|  setl nocursorline nocursorcolumn
+      \|endif
+nnoremap <silent> <Leader>h :ToggleCursorHighlight<CR>
+
+
+" FullScreen
+command! FullSize
+      \ if s:is_windows
+      \|  if s:is_cui
+      \|    winpos 0 0
+      \|    set lines=80 columns=255
+      \|  else
+      \|    simalt ~x
+      \|  endif
+      \|else
+      \|  set lines=80 columns=255
+      \|endif
+noremap  <silent> <F11>   :<C-u>FullSize<CR>
+noremap! <silent> <F11>   <Esc>:FullSize<CR>
+noremap  <silent> <M-F11> :<C-u>FullSize<CR>
+noremap! <silent> <M-F11> <Esc>:FullSize<CR>
 
 
 " ------------------------------------------------------------
@@ -552,9 +566,8 @@ endif
 " Character-code and EOL-code {{{
 " ------------------------------------------------------------
 if s:is_windows
-  set ff=unix
   set fenc=utf-8
-  let &termencoding = &encoding
+  set termencoding=cp932
   if s:is_cui
     set enc=cp932
   else
@@ -562,16 +575,21 @@ if s:is_windows
   endif
 endif
 
-set fileformats=unix,dos,mac
+autocmd MyAutoCmd BufWritePre *
+      \ if &ff != 'unix' && input(printf('Convert fileformat:%s to unix? [y/N]', &ff)) =~? '^y\%[es]$'
+      \|  setl ff=unix
+      \|endif
+
+set fileformats=dos,unix,mac
 set fileencodings=utf-8,euc-jp,cp932
 " Fix 'fileencoding' to use 'encoding'
 " if the buffer only contains 7-bit characters.
 " Note that if the buffer is not 'modifiable',
 " its 'fileencoding' cannot be changed, so that such buffers are skipped.
 autocmd MyAutoCmd BufReadPost *
-      \  if &modifiable && !search('[^\x00-\x7F]', 'cnw')
-      \|   set fenc=ascii
-      \| endif
+      \ if &modifiable && !search('[^\x00-\x7F]', 'cnw')
+      \|  set fenc=ascii
+      \|endif
 scriptencoding utf-8  " required to visualize double-byte spaces.(after set enc)
 " }}}
 
@@ -586,12 +604,12 @@ set list
 " Format of invisible characters  to show.
 set listchars=eol:$,tab:>\ ,extends:<
 augroup MyAutoCmd
-  autocmd ColorScheme * highlight WhitespaceEOL term=underline ctermbg=Blue guibg=Blue
-  autocmd VimEnter,WinEnter * call matchadd('WhitespaceEOL', '\s\+$')
-  autocmd ColorScheme * highlight TabEOL term=underline ctermbg=DarkGreen guibg=DarkGreen
-  autocmd VimEnter,WinEnter * call matchadd('TabEOL', '\t\+$')
-  autocmd Colorscheme * highlight JPSpace term=underline ctermbg=Red guibg=Red
-  autocmd VimEnter,WinEnter * call matchadd('JPSpace', '　')  " \%u3000
+  au ColorScheme * highlight WhitespaceEOL term=underline ctermbg=Blue guibg=Blue
+  au VimEnter,WinEnter * call matchadd('WhitespaceEOL', '\s\+$')
+  au ColorScheme * highlight TabEOL term=underline ctermbg=DarkGreen guibg=DarkGreen
+  au VimEnter,WinEnter * call matchadd('TabEOL', '\t\+$')
+  au Colorscheme * highlight JPSpace term=underline ctermbg=Red guibg=Red
+  au VimEnter,WinEnter * call matchadd('JPSpace', '　')  " \%u3000
 augroup END
 " }}}
 
@@ -709,10 +727,10 @@ endif
 " Keybinds {{{
 " ------------------------------------------------------------
 " Cursor-move setting at insert-mode.
-inoremap <C-h> <Left>
-inoremap <C-j> <Down>
-inoremap <C-k> <Up>
-inoremap <C-l> <Right>
+inoremap <C-h>   <Left>
+inoremap <C-j>   <Down>
+inoremap <C-k>   <Up>
+inoremap <C-l>   <Right>
 " Cursor-move setting at insert-mode.
 cnoremap <M-h>   <Left>
 cnoremap <M-j>   <Down>
