@@ -2,8 +2,9 @@
  * @brief テンプレートC++ソースです
  *
  * これは、C++ソースファイルのテンプレートです。
- * @author  koturn 0;
- * @file    template.cpp
+ * @author  <+AUTHOR+>
+ * @date    <+DATE+>
+ * @file    <+FILE+>
  * @version 0.1
  */
 #include <cstdlib>

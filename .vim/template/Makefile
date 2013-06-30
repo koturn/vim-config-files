@@ -3,9 +3,9 @@ CC      = gcc
 # CXX     = g++
 # MACROS  = -DNDEBUG
 # LDLIBS  = -lm
-CFLAGS  = -pipe -O3 -Wall -Wextra $(if $(STD), $(addprefix -std=, $(STD)),) $(MACROS)
+CFLAGS  = -pipe -Wall -Wextra $(if $(STD), $(addprefix -std=, $(STD)),) $(MACROS)
 # CXXFLAGS = -pipe -O3 -Wall -Wextra $(if $(STD), $(addprefix -std=, $(STD)),) $(MACROS)
-LDFLAGS = -pipe -O3 -s
+LDFLAGS = -pipe
 TARGET  = template
 OBJS    = $(addsuffix .o, $(basename $(TARGET)))
 SRCS    = $(OBJS:%.o=%.c)
@@ -14,6 +14,15 @@ SRCS    = $(OBJS:%.o=%.c)
 ifeq ($(OS),Windows_NT)
     TARGET := $(addsuffix .exe, $(TARGET))
     CFLAGS += -finput-charset=utf-8 -fexec-charset=cp932
+else
+    TARGET := $(addsuffix .out, $(TARGET))
+endif
+
+ifeq ($(DEBUG),true)
+    CFLAGS  += -O0 -g
+else
+    CFLAGS  += -O3
+    LDFLAGS += -O3 -s
 endif
 
 ifeq ($(LTO),true)

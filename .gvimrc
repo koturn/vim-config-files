@@ -35,6 +35,7 @@ filetype plugin indent on
 " ------------------------------------------------------------
 " Basic settings {{{
 " ------------------------------------------------------------
+let s:is_windows = has('win16') || has('win32') || has('win64')
 " set lines=90 columns=200
 set guioptions=    " Hide menubar and toolbar.
 set winaltkeys=no  " Turns of the Alt key bindings to the gui menu
@@ -47,18 +48,19 @@ if has('multi_byte_ime') || has('xim')
 endif
 colorscheme koturn
 
-if has('win16') || has('win32') || has('win64')
+if s:is_windows
   set guifont=Consolas:h9 guifontwide=MS_Gothic:h9
 
-  " Setting for printing.
+  Setting for printing.
   set printoptions=number:y,header:0,syntax:y,left:5pt,right:5pt,top:10pt,bottom:10pt
   set printfont=Consolas:h9
 
   " Setting for menubar
-  set langmenu=ja_jp.utf-8
-  source $VIMRUNTIME/delmenu.vim
-  source $VIMRUNTIME/menu.vim
+  " set langmenu=ja_jp.utf-8
+  " source $VIMRUNTIME/delmenu.vim
+  " source $VIMRUNTIME/menu.vim
 endif
+
 
 " Singleton
 if has('clientserver') && has('gui_running') && argc()
@@ -111,7 +113,7 @@ hi IndentGuidesEven guibg=#6666ff
 " ------------------------------------------------------------
 " Others {{{
 " ------------------------------------------------------------
-if exists('&transparency')
+if has('kaoriya') && s:is_windows
   gui
   set transparency=215
 endif

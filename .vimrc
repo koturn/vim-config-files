@@ -24,11 +24,23 @@ if !exists($MYGVIMRC)
   let $MYGVIMRC = expand('~/.gvimrc')
 endif
 
+
 set foldmethod=marker
 
 augroup MyAutoCmd
   autocmd!
 augroup END
+
+if has('vim_starting') && has('reltime')
+  let s:startuptime = reltime()
+  augroup MyAutoCmd
+    au! VimEnter *
+          \ let s:startuptime = reltime(s:startuptime)
+          \|redraw
+          \|echomsg 'startuptime: ' . reltimestr(s:startuptime)
+          \|unlet s:startuptime
+  augroup END
+endif
 " }}}
 
 
@@ -38,14 +50,15 @@ augroup END
 " NeoBundle {{{
 " ------------------------------------------------------------
 " If neobundle is not exist, finish setting.
-"""""" if !isdirectory(expand('~/.vim/bundle/neobundle.vim'))
+"""""" if !isdirectory(expand('~/.vim/bundle/neobundle.vim')) || v:version < 702
 "   finish
 """""" endif
 if has('vim_starting')
   source $VIMRUNTIME/macros/editexisting.vim
   set runtimepath+=$DOTVIM/bundle/neobundle.vim
-  call neobundle#rc(expand('$DOTVIM/bundle/'))
 endif
+call neobundle#rc(expand('$DOTVIM/bundle/'))
+
 NeoBundle 'Shougo/neobundle.vim'
 NeoBundle 'Shougo/vimproc', {
       \  'build' : {
@@ -61,11 +74,25 @@ NeoBundleLazy 'Shougo/unite.vim', {
       \      'name' : 'Unite',
       \      'complete' : 'customlist,unite#complete_source'
       \},]}}
-NeoBundle 'Shougo/neocomplcache'
-NeoBundle 'Shougo/neosnippet'
-let g:neocomplcache_enable_at_startup = 1
-inoremap <expr><CR>   neocomplcache#smart_close_popup() . '<CR>'
+
+if has('lua') && v:version >= 703 && has('patch825')
+  NeoBundleLazy 'Shougo/neocomplete.vim', {
+        \  'autoload' : {'insert' : 1}
+        \}
+  inoremap <expr><CR>   neocomplete#smart_close_popup() . '<CR>'
+  let g:neocomplete#enable_at_startup = 1
+else
+  NeoBundleLazy 'Shougo/neocomplcache', {
+        \  'autoload' : {'insert' : 1}
+        \}
+  inoremap <expr><CR>   neocomplcache#smart_close_popup() . '<CR>'
+  let g:neocomplcache_enable_at_startup = 1
+endif
+
 inoremap <expr><TAB>  pumvisible() ? '<C-n>' : '<TAB>'
+NeoBundleLazy 'Shougo/neosnippet', {
+      \  'autoload' : {'insert' : 1}
+      \}
 
 
 NeoBundle 'fholgado/minibufexpl.vim'
@@ -101,10 +128,12 @@ NeoBundleLazy 'osyo-manga/vim-anzu', {
       \    ['n', '<Plug>(anzu-star-with-echo)'],
       \    ['n', '<Plug>(anzu-sharp-with-echo)']
       \]}}
-nmap n <Plug>(anzu-n-with-echo)
-nmap N <Plug>(anzu-N-with-echo)
-nmap * <Plug>(anzu-star-with-echo)
-nmap # <Plug>(anzu-sharp-with-echo)
+nmap n <Plug>(anzu-n-with-echo)zz
+nmap N <Plug>(anzu-N-with-echo)zz
+nmap * <Plug>(anzu-star-with-echo)zz
+nmap # <Plug>(anzu-sharp-with-echo)zz
+nnoremap g* g*zz
+nnoremap g# g#zz
 
 
 """""" if executable('lynx')
@@ -117,8 +146,8 @@ let g:ref_source_webdict_sites = {
       \  'ej': {'url': 'http://dictionary.infoseek.ne.jp/ejword/%s'},
       \  'wiki-en': {'url': 'http://en.wikipedia.org/wiki/%s'},
       \  'wiki': {'url': 'http://ja.wikipedia.org/wiki/%s'},}
-noremap <Leader>e :<C-u>Ref webdict ej<Space>
-noremap <Leader>j :<C-u>Ref webdict je<Space>
+noremap <Leader>e  :<C-u>Ref webdict ej<Space>
+noremap <Leader>j  :<C-u>Ref webdict je<Space>
 noremap <Leader>we :<C-u>Ref webdict wiki-en<Space>
 noremap <Leader>wj :<C-u>Ref webdict wiki<Space>
 
@@ -179,7 +208,7 @@ NeoBundleLazy 'java_getset.vim', {
 NeoBundleLazy 'jcommenter.vim', {
       \  'autoload' : {'filetypes' : 'java'}
       \}
-autocmd MyAutoCmd FileType java map <silent> <C-c> :call JCommentWriter()<CR><Esc>
+autocmd MyAutoCmd FileType java noremap <silent> <C-c> :call JCommentWriter()<CR><Esc>
 
 NeoBundleLazy 'mitechie/pyflakes-pathogen', {
       \  'autoload' : {'filetypes' : 'python'}
@@ -191,7 +220,7 @@ NeoBundleLazy 'rhysd/endwize.vim', {
       \    'filetypes' : ['lua', 'ruby', 'sh', 'zsh', 'vb', 'vbnet', 'aspvbs', 'vim'],
       \}}
 let g:endwize_add_info_filetypes = ['ruby', 'c', 'cpp']
-"imap <silent><CR> <CR><Plug>DiscretionaryEnd
+" imap <silent><CR> <CR><Plug>DiscretionaryEnd
 
 NeoBundleLazy 'ruby-matchit', {
       \  'autoload' : {'filetypes' : 'ruby'}
@@ -262,14 +291,14 @@ let g:quickrun_config = {
       \    'exec'    : '%C %S',
       \},}
 " nnoremap <Leader>l :<C-u>QuickRun -exec '%c -l %s'<CR>
-"NeoBundleLazy 'lambdalisue/platex.vim', {
-"      \  'autoload' : {'filetypes' : 'tex'}
-"      \}
+" NeoBundleLazy 'lambdalisue/platex.vim', {
+"       \  'autoload' : {'filetypes' : 'tex'}
+"       \}
 
-"NeoBundleLazy 'davidhalter/jedi-vim', {
-"      \  'autoload' : {
-"      \    'filetypes' : ['python']
-"      \}}
+" NeoBundleLazy 'davidhalter/jedi-vim', {
+"       \  'autoload' : {
+"       \    'filetypes' : ['python']
+"       \}}
 
 NeoBundleLazy 'klen/python-mode', {
       \  'autoload' : {'filetypes' : 'python'}
@@ -294,7 +323,7 @@ augroup MyAutoCmd
     au Filetype binary Vinarise
   else  """""" elseif executable('xxd')
     command! Binarise set ft=binary | edit
-    au Filetype binary let &bin=1
+    au Filetype binary let &bin = 1
     au BufReadPost * if &bin | %!xxd -g 1
     au BufReadPost * set ft=xxd | endif
     au BufWritePre * if &bin | %!xxd -r
@@ -391,10 +420,12 @@ NeoBundleLazy 'daisuzu/facebook.vim', {
 set shortmess+=I
 " Enable to use '/' for direstory path separator on Windows.
 set shellslash
-" WOrk with clipboard.
+" Work with clipboard.
 set clipboard=unnamed,autoselect
 " Turn off word wrap.
 set nowrap
+" Turn off starting a new line sutomatically.
+set textwidth=0
 " Set browsedir at directory which is edit on buffer.
 set browsedir=buffer
 " Enable show other file when you change a file.
@@ -417,20 +448,21 @@ set secure
 set noswapfile
 " Backup file.
 " set backupdir=~/vimfiles/backup/
-set nobackup
+set nobackup nowritebackup
 " file of '_viminfo'.
 " set viminfo+=n~/vimfiles/viminfo/
 set viminfo=
+" Show vertical line at column-80
+set colorcolumn=80
+" Open buffer which already exists instead of opening new.
+set switchbuf=useopen
 
 " Indent settings
-set autoindent
-set smartindent
-set smarttab
-set shiftwidth=2
-set tabstop=2
-set expandtab
+set autoindent   smartindent
+set expandtab    smarttab
+set shiftwidth=2 tabstop=2
 " set cindent
-"
+
 " Show line number.
 set number
 if !s:is_cui
@@ -459,60 +491,60 @@ function! g:toggleTabSpace(width)
 endfunction
 nnoremap <silent> <Leader><Tab> :call g:toggleTabSpace(&ts)<CR>
 
+" Make directory automatically.
+function! s:autoMkdir(dir, force)
+  if !isdirectory(a:dir) && (a:force ||
+        \ input(printf('"%s" does not exist. Create? [y/N]', a:dir)) =~? '^y\%[es]$')
+    call mkdir(iconv(a:dir, &encoding, &termencoding), 'p')
+  endif
+endfunction
+autocmd MyAutoCmd BufWritePre * call s:autoMkdir(expand('<afile>:p:h'), v:cmdbang)
 
-" If Cygwin-mintty
-if s:is_cygwin && &term ==# 'xterm'
-  " Change cursor shape depending on mode.
-  let &t_ti .= "\e[1 q"
-  let &t_SI .= "\e[5 q"
-  let &t_EI .= "\e[1 q"
-  let &t_te .= "\e[0 q"
+if s:is_cygwin
+  if &term ==# 'xterm'       " In mintty
+    " Change cursor shape depending on mode.
+    let &t_ti .= "\e[1 q"
+    let &t_SI .= "\e[5 q"
+    let &t_EI .= "\e[1 q"
+    let &t_te .= "\e[0 q"
+    set termencoding=utf-8
+  elseif &term ==# 'cygwin'  " In command-prompt
+    set encoding=utf-8
+    set fileencoding=utf-8
+    set termencoding=utf-8
+  endif
 endif
 
-" Delete spaces and tabs when you save files.
-" autocmd MyAutoCmd BufWritePre * :%s/[ \t]\+$//e
 
-command! DeleteTrailingWhitespace %s/[ \t]\+$//g
+command! DeleteTrailingWhitespace silent! %s/[ \t]\+$//g
+command! DeleteBlankLines :g /^$/d
 command! -nargs=1 -complete=file Rename f <args> | call delete(expand('#'))
 command! -nargs=1 -complete=file E tabedit <args>
 command! Q tabclose <args>
-"""""" if v:version >= 703
-" Toggle the line number which was displayed at local windows.
-command! ToggleNumber
-      \ if &relativenumber
-      \|  setl norelativenumber
-      \|else
-      \|  setl relativenumber
-      \|endif
-nnoremap <silent> <Leader>l :ToggleNumber<CR>
-"""""" endif
 
 " Highlight cursor position. (Verticaly and horizontaly)
 command! ToggleCursorHighlight
       \ if !&cursorline || !&cursorcolumn
-      \|  setl cursorline cursorcolumn
+      \|  setl   cursorline   cursorcolumn
       \|else
       \|  setl nocursorline nocursorcolumn
       \|endif
 nnoremap <silent> <Leader>h :ToggleCursorHighlight<CR>
 
-
 " FullScreen
-command! FullSize
-      \ if s:is_windows
-      \|  if s:is_cui
-      \|    winpos 0 0
-      \|    set lines=80 columns=255
-      \|  else
-      \|    simalt ~x
-      \|  endif
-      \|else
-      \|  set lines=80 columns=255
-      \|endif
-noremap  <silent> <F11>   :<C-u>FullSize<CR>
-noremap! <silent> <F11>   <Esc>:FullSize<CR>
-noremap  <silent> <M-F11> :<C-u>FullSize<CR>
-noremap! <silent> <M-F11> <Esc>:FullSize<CR>
+if s:is_windows
+  command! FullSize
+        \ if s:is_cui
+        \|  winpos 0 0
+        \|  set lines=999 columns=999
+        \|else
+        \|  simalt ~x
+        \|endif
+  noremap  <silent> <F11>   :<C-u>FullSize<CR>
+  noremap! <silent> <F11>   <Esc>:FullSize<CR>
+  noremap  <silent> <M-F11> :<C-u>FullSize<CR>
+  noremap! <silent> <M-F11> <Esc>:FullSize<CR>
+endif
 
 
 " ------------------------------------------------------------
@@ -520,11 +552,8 @@ noremap! <silent> <M-F11> <Esc>:FullSize<CR>
 " ------------------------------------------------------------
 " Don't ignore cases when searching.
 set ignorecase
-" When both upper cases and lower cases are included in sercing word,
-" identify them.
-set smartcase
 " Delete indent and EOL with backspace.
-" set backspace=indent,eol,start
+set backspace=indent,eol,start
 " Searches wrap around the end of the file.
 set wrapscan
 " Display the brackets corresponding to the input brackets.
@@ -582,6 +611,7 @@ autocmd MyAutoCmd BufWritePre *
 
 set fileformats=dos,unix,mac
 set fileencodings=utf-8,euc-jp,cp932
+scriptencoding utf-8  " required to visualize double-byte spaces.(after set enc)
 " Fix 'fileencoding' to use 'encoding'
 " if the buffer only contains 7-bit characters.
 " Note that if the buffer is not 'modifiable',
@@ -590,7 +620,6 @@ autocmd MyAutoCmd BufReadPost *
       \ if &modifiable && !search('[^\x00-\x7F]', 'cnw')
       \|  set fenc=ascii
       \|endif
-scriptencoding utf-8  " required to visualize double-byte spaces.(after set enc)
 " }}}
 
 
@@ -602,7 +631,7 @@ scriptencoding utf-8  " required to visualize double-byte spaces.(after set enc)
 " Show invisible characters. (like tabs and eol-character)
 set list
 " Format of invisible characters  to show.
-set listchars=eol:$,tab:>\ ,extends:<
+set listchars=eol:$,tab:>-,extends:<
 augroup MyAutoCmd
   au ColorScheme * highlight WhitespaceEOL term=underline ctermbg=Blue guibg=Blue
   au VimEnter,WinEnter * call matchadd('WhitespaceEOL', '\s\+$')
@@ -623,6 +652,12 @@ function! s:insertTemplate(filename)
   let s:fn = expand(a:filename)
   if !bufexists("%:p") && input(printf('Do you want to load template:"%s"? [y/N]', s:fn)) =~? '^y\%[es]$'
     exec '0r ' . s:fn
+    silent! %s/<+AUTHOR+>/koturn 0;/g
+    silent! exec '%s/<+DATE+>/' . strftime('%Y %m\/%d') . '/g'
+    silent! exec '%s/<+FILE+>/' . fnamemodify(expand('%'), ':t') . '/g'
+    if &ft ==# 'java'
+      exec '%s/<+CLASS+>/' . fnamemodify(expand('%'), ':t:r') . '/g'
+    endif
   endif
   unlet s:fn
 endfunction
@@ -668,29 +703,29 @@ set statusline=%<%f\ %m\ %r%h%w%{'[fenc='.(&fenc!=#''?&fenc:&enc).']\ [ff='.&ff.
 " Change color of status line depending on mode.
 if has('syntax')
   augroup MyAutoCmd
-    autocmd InsertEnter * call s:statusLine(1)
-    autocmd InsertLeave * call s:statusLine(0)
+    au InsertEnter * call s:statusLine(1)
+    au InsertLeave * call s:statusLine(0)
+    au ColorScheme * silent! let s:slhlcmd = 'highlight ' . s:getHighlight('StatusLine')
   augroup END
 endif
 
-let s:slhlcmd = ''
 function! s:statusLine(mode)
-  if a:mode ==# 1  " Enter
-    silent! let s:slhlcmd = 'highlight ' . s:getHighlight('StatusLine')
+  if a:mode == 1
     highlight StatusLine guifg=white guibg=MediumOrchid gui=none ctermfg=white ctermbg=DarkRed cterm=none
-  else             " Leave
+  else
     highlight clear StatusLine
     silent exec s:slhlcmd
   endif
 endfunction
 
 function! s:getHighlight(hi)
-  redir => hl
+  let l:hl = ''
+  redir => l:hl
   exec 'highlight ' . a:hi
   redir END
-  let hl = substitute(hl, '[\r\n]', '', 'g')
-  let hl = substitute(hl, 'xxx', '', '')
-  return hl
+  let l:hl = substitute(l:hl, '[\r\n]', '', 'g')
+  let l:hl = substitute(l:hl, 'xxx', '', '')
+  return l:hl
 endfunction
 " }}}
 
@@ -726,11 +761,45 @@ endif
 " ------------------------------------------------------------
 " Keybinds {{{
 " ------------------------------------------------------------
+" Open Anonymous buffer
+nnoremap <Space>a :hide enew<CR>
+" Turn off the highlight.
+nnoremap <silent> <Esc><Esc> :nohlsearch<CR><Esc>
+" Search the word nearest to the cursor in new window.
+nnoremap <C-w>* <C-w>s*
+nnoremap <C-w># <C-w>s#
+" Move line to line as you see whenever wordwrap is set.
+nnoremap j gj
+nnoremap k gk
+" Toggle relativenumber.
+"""""" if v:version >= 703
+nnoremap <silent> <Leader>l :setl relativenumber!<CR>
+"""""" endif
+" Resize window.
+nnoremap <silent> <M-h>  :wincmd <<CR>
+nnoremap <silent> <M-j>  :wincmd +<CR>
+nnoremap <silent> <M-k>  :wincmd -<CR>
+nnoremap <silent> <M-l>  :wincmd ><CR>
+nnoremap <silent> <Esc>h :wincmd <<CR>
+nnoremap <silent> <Esc>j :wincmd +<CR>
+nnoremap <silent> <Esc>k :wincmd -<CR>
+nnoremap <silent> <Esc>l :wincmd ><CR>
+
 " Cursor-move setting at insert-mode.
-inoremap <C-h>   <Left>
-inoremap <C-j>   <Down>
-inoremap <C-k>   <Up>
-inoremap <C-l>   <Right>
+inoremap <C-h> <Left>
+inoremap <C-j> <Down>
+inoremap <C-k> <Up>
+inoremap <C-l> <Right>
+" Insert a blank line in insert mode.
+inoremap <C-o> <Esc>o
+" Easy <Esc> in insert-mode.
+inoremap jj <Esc>
+" No wait for <Esc>.
+if s:is_unix && s:is_cui
+  inoremap <silent> <ESC> <ESC>
+  inoremap <silent> <C-[> <ESC>
+endif
+
 " Cursor-move setting at insert-mode.
 cnoremap <M-h>   <Left>
 cnoremap <M-j>   <Down>
@@ -753,22 +822,24 @@ cnoremap <Esc>w  <S-Right>
 cnoremap <Esc>b  <S-Left>
 cnoremap <Esc>x  <Del>
 cnoremap <Esc>p  <C-r><S-">
-" Search the word nearest to the cursor in new window.
-nnoremap <C-w>*  <C-w>s*
-nnoremap <C-w>#  <C-w>s#
-" Insert a blank line in insert mode.
-inoremap <C-o> <Esc>o
-" Easy <Esc> in insert-mode.
-inoremap jj <Esc>
-" Turn off the highlight.
-nnoremap <silent> <Esc><Esc> :nohlsearch<CR><Esc>
+" Add excape to '/' and '?' automatically.
+cnoremap <expr> / getcmdtype() == '/' ? '\/' : '/'
+cnoremap <expr> ? getcmdtype() == '?' ? '\?' : '?'
+" Select paren easly
+onoremap ) f)
+onoremap ( t(
+vnoremap ) f)
+vnoremap ( t(
+
+" Reselect visual block after indent.
+vnoremap < <gv
+vnoremap > >gv
+" Paste yanked string vertically.
+vnoremap <C-p> I<C-r>"<ESC><ESC>
 " Sequencial copy
 vnoremap <silent> <M-p> "0p<CR>
-" No wait for <Esc>.
-if s:is_unix && s:is_cui
-  inoremap <silent> <ESC> <ESC>
-  inoremap <silent> <C-[> <ESC>
-endif
+" Select current position to EOL.
+vnoremap v $<Left>
 
 noremap  <silent> <F2> <Esc>:NERDTree<CR>
 noremap! <silent> <F2> <Esc>:NERDTree<CR>
@@ -787,10 +858,8 @@ noremap! <silent> <S-F5> <Esc>:sp +enew<CR>:r !make<CR>
 
 " Open .vimrc
 noremap  <silent> <Space>c <Esc>:e $MYVIMRC<CR>
-
 " Open .gvimrc
 noremap  <silent> <Space>g <Esc>:e $MYGVIMRC<CR>
-
 if s:is_cui
   " Reload .vimrc.
   noremap  <silent> <F12> :<C-u>source $MYVIMRC<CR>

@@ -2,8 +2,9 @@
  * @brief テンプレートcソースです
  *
  * これは、C言語ソースファイルのテンプレートです。
- * @author  koturn 0;
- * @file    template.c
+ * @author  <+AUTHOR+>
+ * @date    <+DATE+>
+ * @file    <+FILE+>
  * @version 0.1
  */
 #include <stdio.h>
