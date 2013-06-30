@@ -500,21 +500,6 @@ function! s:autoMkdir(dir, force)
 endfunction
 autocmd MyAutoCmd BufWritePre * call s:autoMkdir(expand('<afile>:p:h'), v:cmdbang)
 
-if s:is_cygwin
-  if &term ==# 'xterm'       " In mintty
-    " Change cursor shape depending on mode.
-    let &t_ti .= "\e[1 q"
-    let &t_SI .= "\e[5 q"
-    let &t_EI .= "\e[1 q"
-    let &t_te .= "\e[0 q"
-    set termencoding=utf-8
-  elseif &term ==# 'cygwin'  " In command-prompt
-    set encoding=utf-8
-    set fileencoding=utf-8
-    set termencoding=utf-8
-  endif
-endif
-
 
 command! DeleteTrailingWhitespace silent! %s/[ \t]\+$//g
 command! DeleteBlankLines :g /^$/d
@@ -603,6 +588,22 @@ if s:is_windows
     set enc=utf-8
   endif
 endif
+
+if s:is_cygwin
+  if &term ==# 'xterm'       " In mintty
+    " Change cursor shape depending on mode.
+    let &t_ti .= "\e[1 q"
+    let &t_SI .= "\e[5 q"
+    let &t_EI .= "\e[1 q"
+    let &t_te .= "\e[0 q"
+    set termencoding=utf-8
+  elseif &term ==# 'cygwin'  " In command-prompt
+    set encoding=utf-8
+    set fileencoding=utf-8
+    set termencoding=utf-8
+  endif
+endif
+
 
 autocmd MyAutoCmd BufWritePre *
       \ if &ff != 'unix' && input(printf('Convert fileformat:%s to unix? [y/N]', &ff)) =~? '^y\%[es]$'

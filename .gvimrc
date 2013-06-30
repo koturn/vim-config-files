@@ -51,7 +51,7 @@ colorscheme koturn
 if s:is_windows
   set guifont=Consolas:h9 guifontwide=MS_Gothic:h9
 
-  Setting for printing.
+  " Setting for printing.
   set printoptions=number:y,header:0,syntax:y,left:5pt,right:5pt,top:10pt,bottom:10pt
   set printfont=Consolas:h9
 
