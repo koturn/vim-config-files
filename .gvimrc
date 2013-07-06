@@ -13,21 +13,21 @@
 " ------------------------------------------------------------
 " http://nanasi.jp/articles/vim/movewin_vim.html
 NeoBundleLazy 'movewin.vim', {
-      \  'autoload': {'commands' : 'MoveWin'}
+      \ 'autoload': {'commands' : 'MoveWin'}
       \}
 
 NeoBundleLazy 'thinca/vim-fontzoom', {
-      \  'autoload' : {
-      \    'commands' : 'Fontzoom',
-      \    'mappings' : [
-      \      ['n', '<Plug>(fontzoom-larger)'],
-      \      ['n', '<Plug>(fontzoom-smaller)']
+      \ 'autoload' : {
+      \   'commands' : 'Fontzoom',
+      \   'mappings' : [
+      \     ['n', '<Plug>(fontzoom-larger)'],
+      \     ['n', '<Plug>(fontzoom-smaller)']
       \]}}
 nmap + <Plug>(fontzoom-larger)
 nmap - <Plug>(fontzoom-smaller)
 filetype plugin indent on
 " }}}
-" ************* The end of etting of NeoBundle *************
+" ************** The end of etting of NeoBundle **************
 
 
 
@@ -36,7 +36,6 @@ filetype plugin indent on
 " Basic settings {{{
 " ------------------------------------------------------------
 let s:is_windows = has('win16') || has('win32') || has('win64')
-" set lines=90 columns=200
 set guioptions=    " Hide menubar and toolbar.
 set winaltkeys=no  " Turns of the Alt key bindings to the gui menu
 
@@ -46,7 +45,6 @@ if has('multi_byte_ime') || has('xim')
   " Default state of IME on insert mode and searching mode.
   set iminsert=0 imsearch=0  " for no KaoriYa WIN gvim
 endif
-colorscheme koturn
 
 if s:is_windows
   set guifont=Consolas:h9 guifontwide=MS_Gothic:h9
@@ -64,16 +62,16 @@ endif
 
 " Singleton
 if has('clientserver') && has('gui_running') && argc()
-  let s:running_vim_list = filter(
-        \  split(serverlist(), '\n'),
-        \  'v:val !=? v:servername')
-  if !empty(s:running_vim_list)
-    silent execute '!start gvim'
-          \  '--servername' s:running_vim_list[0]
-          \  '--remote-tab-silent' join(argv(), ' ')
-    qa!
+  let l:running_vim_list = filter(
+        \ split(serverlist(), '\n'),
+        \ 'v:val !=? v:servername')
+  if !empty(l:running_vim_list)
+    silent exec '!start gvim'
+          \ '--servername' l:running_vim_list[0]
+          \ '--remote-tab-silent' join(argv(), ' ')
+    quitall!
   endif
-  unlet s:running_vim_list
+  unlet l:running_vim_list
 endif
 
 
@@ -92,27 +90,9 @@ set mousehide
 
 
 " ------------------------------------------------------------
-" Settings for IndentGuides {{{
+" END of .gvimrc {{{
 " ------------------------------------------------------------
-" You have to set following after colorscheme.
-" Enable highlighting indent at top level.
-let g:indent_guides_start_level = 1
-" Disable auto color. (You have to set manually.)
-let g:indent_guides_auto_colors = 0
-" Guide(highlight) width.
-let g:indent_guides_guide_size  = 1
-" Guide color of odd indentation.
-hi IndentGuidesOdd  guibg=#663366
-" Guide color of even indentation.
-hi IndentGuidesEven guibg=#6666ff
-" }}}
-
-
-
-
-" ------------------------------------------------------------
-" Others {{{
-" ------------------------------------------------------------
+colorscheme koturn
 if has('kaoriya') && s:is_windows
   gui
   set transparency=215
