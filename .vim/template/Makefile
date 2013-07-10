@@ -1,14 +1,14 @@
 ### This Makefile was written for GNU Make. ###
-CC      = gcc
-# CXX     = g++
-# MACROS  = -DNDEBUG
-# LDLIBS  = -lm
-CFLAGS  = -pipe -Wall -Wextra $(if $(STD), $(addprefix -std=, $(STD)),) $(MACROS)
-# CXXFLAGS = -pipe -O3 -Wall -Wextra $(if $(STD), $(addprefix -std=, $(STD)),) $(MACROS)
-LDFLAGS = -pipe
-TARGET  = template
-OBJS    = $(addsuffix .o, $(basename $(TARGET)))
-SRCS    = $(OBJS:%.o=%.c)
+CC       = gcc
+CXX      = g++
+# MACROS   = -DNDEBUG
+# LDLIBS   = -lm
+CFLAGS   = -pipe -Wall -Wextra $(COPTFLAGS) $(if $(STD), $(addprefix -std=, $(STD)),) $(MACROS)
+CXXFLAGS = -pipe -O3 -Wall -Wextra $(if $(STD), $(addprefix -std=, $(STD)),) $(MACROS)
+LDFLAGS  = -pipe $(LDOPTFLAGS)
+TARGET   = template
+OBJS     = $(addsuffix .o, $(basename $(TARGET)))
+SRCS     = $(OBJS:%.o=%.c)
 
 
 ifeq ($(OS),Windows_NT)
@@ -18,16 +18,24 @@ else
     TARGET := $(addsuffix .out, $(TARGET))
 endif
 
-ifeq ($(DEBUG),true)
-    CFLAGS  += -O0 -g
+# priority : DEBUG > LTO > OPT
+ifeq ($(OPT),true)
+    COPTFLAGS    = -flto -Ofast -march=native
+    CXXOPTFLAGS  = -flto -Ofast -march=native
+    LDOPTFLAGS   = -flto -Ofast -s
 else
-    CFLAGS  += -O3
-    LDFLAGS += -O3 -s
+    COPTFLAGS    = -O3
+    CXXOPTFLAGS  = -O3
+    LDOPTFLAGS   = -O3 -s
 endif
-
 ifeq ($(LTO),true)
-    CFLAGS  += -flto
-    LDFLAGS += -flto
+    COPTFLAGS    = -flto
+    CXXOPTFLAGS  = -flto
+    LDOPTFLAGS   = -flto
+endif
+ifeq ($(DEBUG),true)
+    COPTFLAGS    = -O0 -g
+    CXXOPTFLAGS  = -O0 -g
 endif
 
 ifeq ($(OMP),true)

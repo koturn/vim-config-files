@@ -71,7 +71,7 @@ NeoBundleLazy 'Shougo/unite.vim', {
       \},]}}
 nnoremap [unite] <Nop>
 nmap ,u  [unite]
-noremap <silent> [unite]u :<C-u>Unite<Space>
+noremap <silent> [unite]u :<C-u>Unite
 
 if has('lua') && v:version >= 703 && has('patch825')
   NeoBundleLazy 'Shougo/neocomplete.vim', {
@@ -106,8 +106,6 @@ augroup MyAutoCmd
 augroup END
 
 NeoBundle 'hrp/EnhancedCommentify'
-" NeoBundle 'kana/vim-smartinput'
-
 
 """""" if executable('w3m')
 NeoBundleLazy 'yuratomo/w3m.vim', {
@@ -203,6 +201,14 @@ let g:vimshell_right_prompt = '"[" . strftime("%Y/%m/%d %H:%M:%S", localtime()) 
 "   autocmd MyAutoCmd VimEnter * VimShell
 " endif
 
+" NeoBundleLazy 'nosami/Omnisharp', {
+"       \ 'autoload': {'filetypes': ['cs']},
+"       \ 'build': {
+"       \   'windows': 'MSBuild.exe server/OmniSharp.sln /p:Platform="Any CPU"',
+"       \   'mac': 'xbuild server/OmniSharp.sln',
+"       \   'unix': 'xbuild server/OmniSharp.sln'
+"       \}}
+
 
 " http://nanasi.jp/articles/vim/java_getset_vim.html
 NeoBundleLazy 'java_getset.vim', {
@@ -213,18 +219,17 @@ NeoBundleLazy 'java_getset.vim', {
 NeoBundleLazy 'jcommenter.vim', {
       \ 'autoload' : {'filetypes' : 'java'}
       \}
-autocmd MyAutoCmd FileType java noremap <silent> <C-c> :call JCommentWriter()<CR><Esc>
 
 NeoBundleLazy 'mitechie/pyflakes-pathogen', {
       \ 'autoload' : {'filetypes' : 'python'}
       \}
 
 " Clone of 'tpope/vim-endwise'.
-NeoBundleLazy 'rhysd/endwize.vim', {
-      \ 'autoload' : {
-      \   'filetypes' : ['lua', 'ruby', 'sh', 'zsh', 'vb', 'vbnet', 'aspvbs', 'vim'],
-      \}}
-let g:endwize_add_info_filetypes = ['ruby', 'c', 'cpp']
+" NeoBundleLazy 'rhysd/endwize.vim', {
+"       \ 'autoload' : {
+"       \   'filetypes' : ['lua', 'ruby', 'sh', 'zsh', 'vb', 'vbnet', 'aspvbs', 'vim'],
+"       \}}
+" let g:endwize_add_info_filetypes = ['ruby', 'c', 'cpp']
 " imap <silent><CR> <CR><Plug>DiscretionaryEnd
 
 NeoBundleLazy 'ruby-matchit', {
@@ -242,7 +247,7 @@ set tags=tags
 
 NeoBundleLazy 'thinca/vim-quickrun', {
       \ 'autoload' : {
-      \   'filetypes' : ['c', 'cpp', 'cs', 'java', 'python', 'perl', 'ruby', 'javascript'],
+      \   'filetypes' : ['c', 'cpp', 'cs', 'java', 'python', 'perl', 'ruby', 'r'],
       \   'commands'  : 'QuickRun'
       \}}
 let g:quickrun_config = {
@@ -259,46 +264,40 @@ let g:quickrun_config = {
       \ 'lisp'   : {'type' : 'my_lisp'},
       \ 'python' : {'type' : 'my_python'},
       \ 'ruby'   : {'type' : 'my_ruby'},
+      \ 'r'      : {'type' : 'my_r'},
       \ 'tex'    : {'type' : 'my_tex'},
       \ 'my_c' : {
       \   'command' : 'gcc',
       \   'cmdopt'  : '-Wall -Wextra -fsyntax-only',
       \   'exec'    : '%C %o %S',
-      \ },
-      \ 'my_cpp' : {
+      \ }, 'my_cpp' : {
       \   'command' : 'g++',
       \   'cmdopt'  : '-Wall -Wextra -fsyntax-only',
       \   'exec'    : '%C %o %S',
-      \ },
-      \ 'my_cs' : {
+      \ }, 'my_cs' : {
       \   'command' : 'csc',
       \   'cmdopt'  : '/out:csOut.exe',
       \   'exec'    : '%C %o %S',
-      \ },
-      \ 'my_java' : {
+      \ }, 'my_java' : {
       \   'command' : 'javac',
       \   'exec'    : '%C %S',
-      \ },
-      \ 'my_lisp' : {
+      \ }, 'my_lisp' : {
       \   'command' : 'clisp',
       \   'exec'    : '%C %S',
-      \ },
-      \ 'my_python' : {
+      \ }, 'my_python' : {
       \   'command' : 'python',
       \   'exec'    : '%C %S',
-      \ },
-      \ 'my_ruby' : {
+      \ }, 'my_ruby' : {
       \   'command' : 'ruby',
       \   'exec'    : '%C %S',
-      \ },
-      \ 'my_tex' : {
+      \ }, 'my_r' : {
+      \   'command' : 'Rscript',
+      \   'exec'    : '%C %S',
+      \ }, 'my_tex' : {
       \   'command' : 'pdflatex',
       \   'exec'    : '%C %S',
-      \},}
-" nnoremap <Leader>l :<C-u>QuickRun -exec '%c -l %s'<CR>
-" NeoBundleLazy 'lambdalisue/platex.vim', {
-"       \ 'autoload' : {'filetypes' : 'tex'}
-"       \}
+      \}}
+nnoremap <Leader>r :<C-u>QuickRun -exec '%C %S'<CR>
 
 " NeoBundleLazy 'davidhalter/jedi-vim', {
 "       \ 'autoload' : {
@@ -468,7 +467,6 @@ set switchbuf=useopen
 set autoindent   smartindent
 set expandtab    smarttab
 set shiftwidth=2 tabstop=2
-" set cindent
 
 " Show line number.
 set number
@@ -476,7 +474,6 @@ if !s:is_cui
   set cursorline cursorcolumn
 endif
 
-nnoremap <silent> <Leader><Tab> :call g:toggle_tab_space(&ts)<CR>
 function! g:toggle_tab_space(width)
   let l:i = 0
   let l:spaces = ''
@@ -484,28 +481,103 @@ function! g:toggle_tab_space(width)
     let l:spaces .= ' '
     let l:i += 1
   endwhile
-  unlet l:i
 
   let &sw = a:width
   let &ts = a:width
+  let l:cursor = getpos('.')
   if &expandtab
     set noexpandtab
-    silent! exec '%s/' . l:spaces . '/\t/g'
+    let l:cmd = '%s/\(^\(' . l:spaces . '\)*\)' . l:spaces . '/\1\t/g'
+    call s:try_repeat(l:cmd)
   else
     set expandtab
-    silent! exec '%s/\t/' . l:spaces . '/g'
+    let l:cmd = '%s/\(^\t*\)\t/\1' . l:spaces . '/g'
+    call s:try_repeat(l:cmd)
   endif
-  unlet l:spaces
+  call setpos('.', l:cursor)
+endfunction
+nnoremap <silent> <Leader><Tab> :<C-u>call g:toggle_tab_space(&ts)<CR>
+
+function! s:try_repeat(cmd)
+  try
+    while 1
+      silent exec a:cmd
+    endwhile
+  catch
+  endtry
 endfunction
 
+
 " Make directory automatically.
-autocmd MyAutoCmd BufWritePre * call s:auto_mkdir(expand('<afile>:p:h'), v:cmdbang)
 function! s:auto_mkdir(dir, force)
   if !isdirectory(a:dir) && (a:force ||
         \ input(printf('"%s" does not exist. Create? [y/N]', a:dir)) =~? '^y\%[es]$')
     call mkdir(iconv(a:dir, &encoding, &termencoding), 'p')
   endif
 endfunction
+autocmd MyAutoCmd BufWritePre * call s:auto_mkdir(expand('<afile>:p:h'), v:cmdbang)
+
+
+" Command of 'which' for vim command.
+function! s:cmd_which(cmd)
+  if stridx(a:cmd, '/') != -1 || stridx(a:cmd, '\\') != -1
+    echoerr a:cmd 'is not a command-name.'
+    return
+  endif
+  let l:path = substitute(substitute($PATH, '\\', '/', 'g'), ';', ',', 'g')
+  let l:sfx  = &suffixesadd
+  if s:is_windows
+    setl suffixesadd=.exe,.cmd,.bat
+  endif
+  let l:file_list = findfile(a:cmd, l:path, -1)
+  if l:file_list != []
+    echo fnamemodify(l:file_list[0], ':p')
+  else
+    echo a:cmd . ' was not found.'
+  endif
+
+  let &suffixesadd = l:sfx
+endfunction
+command! -nargs=1 Which call s:cmd_which(<q-args>)
+
+
+" lcd to buffer-directory.
+function! s:cmd_lcd(count)
+  let l:dir = expand('%:p' . repeat(':h', a:count + 1))
+  if isdirectory(l:dir)
+    exec 'lcd' fnameescape(l:dir)
+  endif
+endfunction
+command! -nargs=0 -count=0 Lcd call s:cmd_lcd(<count>)
+
+
+" Preview fold area.
+function! s:preview_fold(previewheight)
+  let l:lnum = line('.')
+  if foldclosed(l:lnum) > -1
+    let l:lines = getline(l:lnum, foldclosedend(l:lnum))
+    if len(l:lines) > a:previewheight
+      let l:lines = l:lines[: a:previewheight - 1]
+    endif
+
+    let l:filetype = &filetype
+    let l:winnr = bufwinnr('__fold__')
+    if l:winnr == -1
+      silent exec 'botright' a:previewheight . 'split' '__fold__'
+    else
+      silent wincmd P
+    endif
+
+    exec '%d _'
+    exec 'setl syntax=' . l:filetype
+    setl buftype=nofile noswapfile bufhidden=wipe previewwindow foldlevel=99 nowrap
+    call append(0, l:lines)
+    wincmd p
+  else
+    pclose
+  endif
+endfunction
+nnoremap <silent> zp :<C-u>call <SID>preview_fold(&previewheight)<CR>
 
 " If text-file has shebang, add permision of executable.
 if executable('chmod')
@@ -515,12 +587,16 @@ if executable('chmod')
     if getline(1) =~# '^#!' && !executable(l:file)
       silent! call vimproc#system('chmod a+x ' . shellescape(l:file))
     endif
-    unlet l:file
   endfunction
 endif
 
 
-command! DeleteTrailingWhitespace silent! %s/[ \t]\+$//g
+function! s:delte_trailing_whitespace()
+  let l:cursor = getpos('.')
+  silent! %s/[ \t]\+$//g
+  call setpos('.', l:cursor)
+endfunction
+command! DeleteTrailingWhitespace call s:delte_trailing_whitespace()
 command! DeleteBlankLines :g /^$/d
 command! -nargs=1 -complete=file Rename f <args> | call delete(expand('#'))
 command! -nargs=1 -complete=file E tabedit <args>
@@ -533,7 +609,7 @@ command! ToggleCursorHighlight
       \ | else
       \ |   setl nocursorline nocursorcolumn
       \ | endif
-nnoremap <silent> <Leader>h :ToggleCursorHighlight<CR>
+nnoremap <silent> <Leader>h :<C-u>ToggleCursorHighlight<CR>
 
 
 " FullScreen
@@ -723,11 +799,8 @@ function! s:insert_template(filename)
     silent! %s/<+AUTHOR+>/koturn 0;/g
     silent! exec '%s/<+DATE+>/' . strftime('%Y %m\/%d') . '/g'
     silent! exec '%s/<+FILE+>/' . fnamemodify(expand('%'), ':t') . '/g'
-    if &ft ==# 'java'
-      exec '%s/<+CLASS+>/' . fnamemodify(expand('%'), ':t:r') . '/g'
-    endif
+    silent! exec '%s/<+CLASS+>/' . fnamemodify(expand('%'), ':t:r') . '/g'
   endif
-  unlet l:fn
 endfunction
 
 let c_gnu = 1  " Enable highlight gnu-C keyword in C-mode.
@@ -771,13 +844,13 @@ set statusline=%<%f\ %m\ %r%h%w%{'[fenc='.(&fenc!=#''?&fenc:&enc).']\ [ff='.&ff.
 " Change color of status line depending on mode.
 if has('syntax')
   augroup MyAutoCmd
-    au InsertEnter * call s:highlight_sl(1)
-    au InsertLeave * call s:highlight_sl(0)
+    au InsertEnter * call s:hi_statusline(1)
+    au InsertLeave * call s:hi_statusline(0)
     au ColorScheme * silent! let s:slhlcmd = 'highlight ' . s:get_highlight('StatusLine')
   augroup END
 endif
 
-function! s:highlight_sl(mode)
+function! s:hi_statusline(mode)
   if a:mode == 1
     highlight StatusLine guifg=white guibg=MediumOrchid gui=none ctermfg=white ctermbg=DarkRed cterm=none
   else
@@ -804,9 +877,9 @@ endfunction
 " Keybinds {{{
 " ------------------------------------------------------------
 " Open Anonymous buffer
-nnoremap <Space>a :hide enew<CR>
+nnoremap <Space>a :<C-u>hide enew<CR>
 " Turn off the highlight.
-nnoremap <silent> <Esc><Esc> :nohlsearch<CR><Esc>
+nnoremap <silent> <Esc><Esc> :<C-u>nohlsearch<CR><Esc>
 " Search the word nearest to the cursor in new window.
 nnoremap <C-w>* <C-w>s*
 nnoremap <C-w># <C-w>s#
@@ -815,7 +888,7 @@ nnoremap j gj
 nnoremap k gk
 " Toggle relativenumber.
 """""" if v:version >= 703
-nnoremap <silent> <Leader>l :setl relativenumber!<CR>
+nnoremap <silent> <Leader>l :<C-u>setl relativenumber!<CR>
 """""" endif
 " Resize window.
 nnoremap <silent> <M-h>  <C-w><
@@ -988,7 +1061,7 @@ inoremap <BS> <Esc>:call <SID>msg_backspace()<CR>a
 " END of .vimrc {{{
 " ------------------------------------------------------------
 if s:is_cui
-  filetype plugin indent on
   colorscheme koturn
+  filetype plugin indent on
 endif
 " }}}

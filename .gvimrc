@@ -25,7 +25,6 @@ NeoBundleLazy 'thinca/vim-fontzoom', {
       \]}}
 nmap + <Plug>(fontzoom-larger)
 nmap - <Plug>(fontzoom-smaller)
-filetype plugin indent on
 " }}}
 " ************** The end of etting of NeoBundle **************
 
@@ -62,16 +61,16 @@ endif
 
 " Singleton
 if has('clientserver') && has('gui_running') && argc()
-  let l:running_vim_list = filter(
+  let s:running_vim_list = filter(
         \ split(serverlist(), '\n'),
         \ 'v:val !=? v:servername')
-  if !empty(l:running_vim_list)
+  if !empty(s:running_vim_list)
     silent exec '!start gvim'
-          \ '--servername' l:running_vim_list[0]
+          \ '--servername' s:running_vim_list[0]
           \ '--remote-tab-silent' join(argv(), ' ')
     quitall!
   endif
-  unlet l:running_vim_list
+  unlet s:running_vim_list
 endif
 
 
@@ -92,9 +91,10 @@ set mousehide
 " ------------------------------------------------------------
 " END of .gvimrc {{{
 " ------------------------------------------------------------
-colorscheme koturn
 if has('kaoriya') && s:is_windows
   gui
   set transparency=215
 endif
+colorscheme koturn
+filetype plugin indent on
 " }}}
