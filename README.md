@@ -45,6 +45,30 @@ $ git clone git://github.com/Shougo/neobundle.vim ~/.vim/bundle/neobundle.vim
 4. openssl  
 5. w3m  
 
+また、e-mailアドレスなどのプライベートな情報は、  
+~/.vim/.private.vim  
+に配置してあります。  
+現在必要な設定項目は、以下の例の通りです。  
+
+~~~~VimL
+""" .private.vim """
+" gmail.vim(https://github.com/yuratomo/gmail.vim)の
+" g:gmail_user_nameに設定される値
+" この変数を定義しなければ、g:gmail_user_nameには、.vimrcで空文字列が代入される。
+let g:gmail_address = 'jeak.koutan.apple@gmail.com'
+
+" previm(https://github.com/kannokanno/previm)の
+" g:previm_open_cmdに設定される値
+" この変数を定義しなければ、g:previm_open_cmdには、.vimrcで空文字列が代入される。
+let g:gmail_address = 'jeak.koutan.apple@gmail.com'
+let g:browser_cmd = 'C:\path\to\browser\chrome.exe'
+~~~~
+
+また、~/.vim/.private.vimが存在しない場合、  
+g:gmail_address  
+g:browser_cmd  
+には空文字列が設定されます。
+
 
 
 
@@ -73,6 +97,7 @@ $ git clone git://github.com/Shougo/neobundle.vim ~/.vim/bundle/neobundle.vim
 行連結とパイプ | 以下のコードのように記述すること
 
 例:
+
 ~~~~VimL
 command! ToggleCursorHighlight
       \   if !&cursorline || !&cursorcolumn
@@ -89,6 +114,7 @@ command! ToggleCursorHighlight
 また、executeでコマンドを実行するのは、必要な場合を除き、なるべく避けること。
 
 例:
+
 ~~~~VimL
 set columns=100
 let &lines = s:lines
@@ -104,9 +130,9 @@ letを用いる場合、代入演算子(=)の前後に1スペース以上空け�
 前項の内容と少し重複するが、基本的に演算子の前後には1スペース以上を開けること。  
 文字列やリストの要素の取り出し(s:list[2 : 4]など)のコロンの前後に1スペース設けること。  
 これは、範囲指定に変数を用いた場合の視認性のためであり、無用なシンタックスエラーを避けるためである。  
-(let s:substr1 = s:str[s:a: 15]は、シンタックスエラー)
 
 例:
+
 ~~~~VimL
 let s:a = 10
 let s:b = 20
@@ -114,6 +140,8 @@ let s:c = s:a + s:b
 let s:str     = 'abcdefghijklmnopqrstuvwxyz'
 let s:substr1 = s:str[5 : 15]
 let s:substr2 = s:str[s:a : a:b]
+" これはシンタックスエラー
+" let s:substr3 = s:str[s:a: a:b]
 ~~~~
 
 
@@ -140,6 +168,7 @@ autocmd中のhighlight | hi
 また、unletで変数消去も試みること。
 
 例:
+
 ~~~~VimL
 function! s:get_winpos_strs()
   let l:wstr = ''
@@ -156,6 +185,7 @@ endfunction
 ifとendifをダブルクオート6つでコメントアウトする。
 
 例:
+
 ~~~~VimL
 """""" if v:version >= 703
 nnoremap <silent> <Leader>l :setl relativenumber!<CR>
@@ -168,6 +198,7 @@ nnoremap <silent> <Leader>l :setl relativenumber!<CR>
 ただし、autocmd!は時間がかかるコマンドなので、augroupをなるべく1つにまとめること。
 
 例:
+
 ~~~~VimL
 augroup MyAutoCmd
   autocmd!
@@ -196,6 +227,7 @@ augroup END
 これは、行連結には時間がかかるためである。
 
 悪い例:
+
 ~~~~VimL
 autocmd MyAutoCmd BufWritePost *
   \   let l:file = expand('%:p')
@@ -205,6 +237,7 @@ autocmd MyAutoCmd BufWritePost *
 ~~~~
 
 良い例:
+
 ~~~~VimL
 function! s:add_permission_x()
   let l:file = expand('%:p')

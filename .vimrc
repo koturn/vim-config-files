@@ -16,7 +16,7 @@
 augroup MyAutoCmd
   autocmd!
 augroup END
-let s:at_startup =  has('vim_starting')
+let s:at_startup = has('vim_starting')
 
 " Measure startup time.
 if s:at_startup && has('reltime')
@@ -41,7 +41,8 @@ if !exists($MYGVIMRC)
   let $MYGVIMRC = expand('~/.gvimrc')
 endif
 let $NEOBUNDLE_DIR = expand('$DOTVIM/bundle/')
-source $DOTVIM/.private.vim
+" If $DOTVIM/.private.vim is exists, ignore error.
+silent! source $DOTVIM/.private.vim
 
 " Singleton (if !s:is_cui)
 if has('clientserver') && argc()
@@ -354,7 +355,7 @@ NeoBundleLazy 'kannokanno/previm', {
       \ 'autoload' : {'filetypes' : 'markdown'}
       \}
 " g:chrome_cmd is defined in ~/.vim/private.vim
-let g:previm_open_cmd = g:chrome_cmd
+let g:previm_open_cmd = get(g:, 'browser_cmd', '')
 
 " When oppening a file, if the file has a particular extension,
 " open the file in binary-mode.
@@ -421,7 +422,7 @@ NeoBundleLazy 'yuratomo/gmail.vim', {
       \ 'autoload' : {'commands' : 'Gmail'}
       \}
 " g:gmail_address is defined in ~/.vim/private.vim
-let g:gmail_user_name = g:gmail_address
+let g:gmail_user_name = get(g:, 'gmail_address', '')
 
 NeoBundleLazy 'sudoku_game.vim', {
       \ 'type' : 'nosync',
