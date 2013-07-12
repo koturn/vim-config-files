@@ -11,12 +11,29 @@
 " In Windows, you have to put HOME-directory.
 " ============================================================
 " ------------------------------------------------------------
-" Variables {{{
+" Initialize and Variables {{{
 " ------------------------------------------------------------
-" Variables to identify environment.
-let s:is_windows =  has('win16') || has('win32') || has('win64')
-let s:is_cygwin  =  has('win32unix')
-let s:is_unix    =  has('unix')
+augroup MyAutoCmd
+  autocmd!
+augroup END
+let s:at_startup =  has('vim_starting')
+
+" Measure startup time.
+if s:at_startup && has('reltime')
+  let s:startuptime = reltime()
+  autocmd MyAutoCmd VimEnter *
+        \   let s:startuptime = reltime(s:startuptime)
+        \ | redraw
+        \ | echomsg 'startuptime: ' . reltimestr(s:startuptime)
+        \ | unlet s:startuptime
+endif
+
+" Variables for various environment.
+let g:is_windows =  has('win16') || has('win32') || has('win64')
+let g:is_cygwin  =  has('win32unix')
+let g:is_mac     = !g:is_windows && (has('mac') || has('macunix') || has('gui_macvim')
+      \ || (!isdirectory('/proc') && executable('sw_vers')))
+let g:is_unix    =  has('unix')
 let s:is_cui     = !has('gui_running')
 
 let $DOTVIM = $HOME . '/.vim'
@@ -24,20 +41,27 @@ if !exists($MYGVIMRC)
   let $MYGVIMRC = expand('~/.gvimrc')
 endif
 let $NEOBUNDLE_DIR = expand('$DOTVIM/bundle/')
+source $DOTVIM/.private.vim
 
-set foldmethod=marker
-
-augroup MyAutoCmd
-  autocmd!
-augroup END
-
-if has('vim_starting') && has('reltime')
-  let s:startuptime = reltime()
-  autocmd MyAutoCmd VimEnter *
-        \   let s:startuptime = reltime(s:startuptime)
-        \ | redraw
-        \ | echomsg 'startuptime: ' . reltimestr(s:startuptime)
-        \ | unlet s:startuptime
+" Singleton (if !s:is_cui)
+if has('clientserver') && argc()
+  let s:running_vim_list = filter(
+        \ split(serverlist(), '\n'),
+        \ 'v:val !=? v:servername')
+  if !empty(s:running_vim_list)
+    if s:is_cui
+      if g:is_windows
+        silent !cls
+      else  " for Linux. (not tested).
+        silent !clear
+      endif
+    endif
+    silent exec '!start gvim'
+          \ '--servername' s:running_vim_list[0]
+          \ '--remote-tab-silent' join(argv(), ' ')
+    quitall!
+  endif
+  unlet s:running_vim_list
 endif
 " }}}
 
@@ -47,8 +71,8 @@ endif
 " ------------------------------------------------------------
 " NeoBundle {{{
 " ------------------------------------------------------------
-if has('vim_starting')
-  source $VIMRUNTIME/macros/editexisting.vim
+if s:at_startup
+  " source $VIMRUNTIME/macros/editexisting.vim
   set runtimepath+=$NEOBUNDLE_DIR/neobundle.vim
 endif
 call neobundle#rc($NEOBUNDLE_DIR)
@@ -106,6 +130,8 @@ augroup MyAutoCmd
 augroup END
 
 NeoBundle 'hrp/EnhancedCommentify'
+" NeoBundle 'kana/vim-smartinput'
+
 
 """""" if executable('w3m')
 NeoBundleLazy 'yuratomo/w3m.vim', {
@@ -147,11 +173,13 @@ NeoBundleLazy 'thinca/vim-ref', {
 let g:ref_source_webdict_sites = {
       \ 'je': {'url': 'http://dictionary.infoseek.ne.jp/jeword/%s'},
       \ 'ej': {'url': 'http://dictionary.infoseek.ne.jp/ejword/%s'},
-      \ 'wiki-en': {'url': 'http://en.wikipedia.org/wiki/%s'},
+      \ 'dn': {'url': 'http://dic.nicovideo.jp/a/%s'},
+      \ 'wiki_en': {'url': 'http://en.wikipedia.org/wiki/%s'},
       \ 'wiki': {'url': 'http://ja.wikipedia.org/wiki/%s'},}
 noremap <Leader>e  :<C-u>Ref webdict ej<Space>
 noremap <Leader>j  :<C-u>Ref webdict je<Space>
-noremap <Leader>we :<C-u>Ref webdict wiki-en<Space>
+noremap <Leader>dn :<C-u>Ref webdict dn<Space>
+noremap <Leader>we :<C-u>Ref webdict wiki_en<Space>
 noremap <Leader>wj :<C-u>Ref webdict wiki<Space>
 
 autocmd MyAutoCmd Filetype ref-webdict setl number
@@ -162,23 +190,32 @@ let g:ref_source_webdict_cmd = 'lynx -dump -nonumbers %s'
 let g:ref_source_webdict_sites.default = 'ej'
 " Filters for output. Remove the first few lines.
 function! g:ref_source_webdict_sites.je.filter(output)
-  return join(split(a:output, "\n")[15 :], "\n")
+  let l:idx = strridx(a:output, '   (C) SHOGAKUKAN')
+  return join(split(a:output[: l:idx - 1], "\n")[15 :], "\n")
 endfunction
 function! g:ref_source_webdict_sites.ej.filter(output)
-  return join(split(a:output, "\n")[15 :], "\n")
+  let l:idx = strridx(a:output, '   (C) SHOGAKUKAN')
+  return join(split(a:output[: l:idx - 1], "\n")[15 :], "\n")
+endfunction
+function! g:ref_source_webdict_sites.dn.filter(output)
+  let l:idx = strridx(a:output, "\n   [l_box_b]\n")
+  return join(split(a:output[: l:idx], "\n")[16 :], "\n")
 endfunction
 function! g:ref_source_webdict_sites.wiki.filter(output)
-  return join(split(a:output, "\n")[17 :], "\n")
+  let l:idx = strridx(a:output, "\n案内メニュー\n")
+  return join(split(a:output[: l:idx], "\n")[17 :], "\n")
+endfunction
+function! g:ref_source_webdict_sites.wiki_en.filter(output)
+  let l:idx = strridx(a:output, "\nNavigation menu\n")
+  return join(split(a:output[: l:idx], "\n")[17 :], "\n")
 endfunction
 """""" endif
 
 
-" http://nanasi.jp/articles/vim/bufonly_vim.html
 NeoBundleLazy 'BufOnly.vim', {
       \ 'autoload' : {'commands' : ['BufOnly', 'Bonly', 'BOnly', 'Bufonly']}
       \}
 
-" http://nanasi.jp/articles/vim/renamer_vim.html
 NeoBundleLazy 'renamer.vim', {
       \ 'autoload' : {'commands' : ['Renamer', 'Ren']}
       \}
@@ -191,31 +228,31 @@ NeoBundleLazy 'Shougo/vimshell', {
       \ 'autoload' : {'commands' : ['VimShell', 'VimShellPop', 'VimShellInteractive']}
       \}
 let g:vimshell_prompt = "('v ')/$ "
-" let g:vimshell_secondary_prompt = '> '
+let g:vimshell_secondary_prompt = '> '
 let g:vimshell_user_prompt = 'getcwd()'
 let g:vimshell_right_prompt = '"[" . strftime("%Y/%m/%d %H:%M:%S", localtime()) . "]"'
 
 " When you start-up vim with no command-line argument,
 " execute VimShell.
-" if has('vim_starting') && expand("%:p") ==# ''
+" if s:at_startup && expand("%:p") ==# ''
 "   autocmd MyAutoCmd VimEnter * VimShell
 " endif
 
-" NeoBundleLazy 'nosami/Omnisharp', {
-"       \ 'autoload': {'filetypes': ['cs']},
-"       \ 'build': {
-"       \   'windows': 'MSBuild.exe server/OmniSharp.sln /p:Platform="Any CPU"',
-"       \   'mac': 'xbuild server/OmniSharp.sln',
-"       \   'unix': 'xbuild server/OmniSharp.sln'
-"       \}}
+"""""" if executable('MSBuild.exe') || executable('xbuild')
+NeoBundleLazy 'nosami/Omnisharp', {
+      \ 'autoload': {'filetypes': ['cs']},
+      \ 'build': {
+      \   'windows': 'MSBuild.exe server/OmniSharp.sln /p:Platform="Any CPU"',
+      \   'mac': 'xbuild server/OmniSharp.sln',
+      \   'unix': 'xbuild server/OmniSharp.sln'
+      \}}
+""""""
 
 
-" http://nanasi.jp/articles/vim/java_getset_vim.html
 NeoBundleLazy 'java_getset.vim', {
       \ 'autoload' : {'filetypes' : 'java'}
       \}
 
-" http://nanasi.jp/articles/vim/jcommenter_vim.html
 NeoBundleLazy 'jcommenter.vim', {
       \ 'autoload' : {'filetypes' : 'java'}
       \}
@@ -225,18 +262,17 @@ NeoBundleLazy 'mitechie/pyflakes-pathogen', {
       \}
 
 " Clone of 'tpope/vim-endwise'.
-" NeoBundleLazy 'rhysd/endwize.vim', {
-"       \ 'autoload' : {
-"       \   'filetypes' : ['lua', 'ruby', 'sh', 'zsh', 'vb', 'vbnet', 'aspvbs', 'vim'],
-"       \}}
-" let g:endwize_add_info_filetypes = ['ruby', 'c', 'cpp']
+NeoBundleLazy 'rhysd/endwize.vim', {
+      \ 'autoload' : {
+      \   'filetypes' : ['lua', 'ruby', 'sh', 'zsh', 'vb', 'vbnet', 'aspvbs', 'vim'],
+      \}}
+let g:endwize_add_info_filetypes = ['ruby', 'c', 'cpp']
 " imap <silent><CR> <CR><Plug>DiscretionaryEnd
 
 NeoBundleLazy 'ruby-matchit', {
       \ 'autoload' : {'filetypes' : 'ruby'}
       \}
 
-" http://nanasi.jp/articles/vim/tagexplorer_vim.html
 """""" if executable('ctags')
 NeoBundleLazy 'tagexplorer.vim', {
       \ 'autoload' : {
@@ -299,6 +335,10 @@ let g:quickrun_config = {
       \}}
 nnoremap <Leader>r :<C-u>QuickRun -exec '%C %S'<CR>
 
+" NeoBundleLazy 'lambdalisue/platex.vim', {
+"       \ 'autoload' : {'filetypes' : 'tex'}
+"       \}
+
 " NeoBundleLazy 'davidhalter/jedi-vim', {
 "       \ 'autoload' : {
 "       \   'filetypes' : ['python']
@@ -310,6 +350,11 @@ NeoBundleLazy 'klen/python-mode', {
 " Do not use the folding of python-mode.
 let g:pymode_folding = 0
 
+NeoBundleLazy 'kannokanno/previm', {
+      \ 'autoload' : {'filetypes' : 'markdown'}
+      \}
+" g:chrome_cmd is defined in ~/.vim/private.vim
+let g:previm_open_cmd = g:chrome_cmd
 
 " When oppening a file, if the file has a particular extension,
 " open the file in binary-mode.
@@ -326,7 +371,7 @@ augroup MyAutoCmd
           \}}
     au Filetype binary Vinarise
   else  """""" elseif executable('xxd')
-    command! Binarise set ft=binary | edit
+    command! Binarise  set ft=binary | edit
     au Filetype binary let &bin = 1
     au BufReadPost * if &bin | %!xxd -g 1
     au BufReadPost * set ft=xxd | endif
@@ -355,7 +400,6 @@ NeoBundleLazy 'mattn/benchvimrc-vim', {
       \ 'autoload' : {'commands' : 'BenchVimrc'}
       \}
 
-" http://nanasi.jp/articles/vim/matrix_vim.html
 NeoBundleLazy 'matrix.vim', {
       \ 'type' : 'nosync',
       \ 'base' : $DOTVIM . '/norepository-plugins',
@@ -368,7 +412,6 @@ NeoBundleLazy 'ScreenShot.vim', {
       \ 'autoload' : {'commands' : ['ScreenShot', 'Text2Html', 'Diff2Html']}
       \}
 
-" http://d.hatena.ne.jp/thinca/20091031/1257001194
 NeoBundleLazy 'thinca/vim-scouter', {
       \ 'autoload' : {'commands' : 'Scouter'}
       \}
@@ -377,9 +420,9 @@ NeoBundleLazy 'thinca/vim-scouter', {
 NeoBundleLazy 'yuratomo/gmail.vim', {
       \ 'autoload' : {'commands' : 'Gmail'}
       \}
-let g:gmail_user_name = 'jeak.koutan.apple@gmail.com'
+" g:gmail_address is defined in ~/.vim/private.vim
+let g:gmail_user_name = g:gmail_address
 
-" http://www.vim.org/scripts/script.php?script_id=3553
 NeoBundleLazy 'sudoku_game.vim', {
       \ 'type' : 'nosync',
       \ 'base' : $DOTVIM . '/norepository-plugins',
@@ -430,6 +473,8 @@ set clipboard=unnamed,autoselect
 set nowrap
 " Turn off start a new line sutomatically.
 set textwidth=0
+" Markers are three '{' and three '}'.
+set foldmethod=marker
 " Set browsedir at directory which is edit on buffer.
 set browsedir=buffer
 " Enable show other file when you change a file.
@@ -470,11 +515,8 @@ set shiftwidth=2 tabstop=2
 
 " Show line number.
 set number
-if !s:is_cui
-  set cursorline cursorcolumn
-endif
 
-function! g:toggle_tab_space(width)
+function! s:toggle_tab_space(width)
   let l:i = 0
   let l:spaces = ''
   while l:i < a:width
@@ -496,7 +538,7 @@ function! g:toggle_tab_space(width)
   endif
   call setpos('.', l:cursor)
 endfunction
-nnoremap <silent> <Leader><Tab> :<C-u>call g:toggle_tab_space(&ts)<CR>
+nnoremap <silent> <Leader><Tab> :<C-u>call <SID>toggle_tab_space(&ts)<CR>
 
 function! s:try_repeat(cmd)
   try
@@ -512,7 +554,7 @@ endfunction
 function! s:auto_mkdir(dir, force)
   if !isdirectory(a:dir) && (a:force ||
         \ input(printf('"%s" does not exist. Create? [y/N]', a:dir)) =~? '^y\%[es]$')
-    call mkdir(iconv(a:dir, &encoding, &termencoding), 'p')
+    call mkdir(iconv(a:dir, &enc, &tenc), 'p')
   endif
 endfunction
 autocmd MyAutoCmd BufWritePre * call s:auto_mkdir(expand('<afile>:p:h'), v:cmdbang)
@@ -526,11 +568,11 @@ function! s:cmd_which(cmd)
   endif
   let l:path = substitute(substitute($PATH, '\\', '/', 'g'), ';', ',', 'g')
   let l:sfx  = &suffixesadd
-  if s:is_windows
+  if g:is_windows
     setl suffixesadd=.exe,.cmd,.bat
   endif
   let l:file_list = findfile(a:cmd, l:path, -1)
-  if l:file_list != []
+  if !empty(l:file_list)
     echo fnamemodify(l:file_list[0], ':p')
   else
     echo a:cmd . ' was not found.'
@@ -538,7 +580,7 @@ function! s:cmd_which(cmd)
 
   let &suffixesadd = l:sfx
 endfunction
-command! -nargs=1 Which call s:cmd_which(<q-args>)
+command! -nargs=1 Which  call s:cmd_which(<q-args>)
 
 
 " lcd to buffer-directory.
@@ -548,7 +590,7 @@ function! s:cmd_lcd(count)
     exec 'lcd' fnameescape(l:dir)
   endif
 endfunction
-command! -nargs=0 -count=0 Lcd call s:cmd_lcd(<count>)
+command! -nargs=0 -count=0 Lcd  call s:cmd_lcd(<count>)
 
 
 " Preview fold area.
@@ -581,26 +623,26 @@ nnoremap <silent> zp :<C-u>call <SID>preview_fold(&previewheight)<CR>
 
 " If text-file has shebang, add permision of executable.
 if executable('chmod')
-  autocmd MyAutoCmd BufWritePost * call s:add_permission_x()
   function! s:add_permission_x()
     let l:file = expand('%:p')
     if getline(1) =~# '^#!' && !executable(l:file)
       silent! call vimproc#system('chmod a+x ' . shellescape(l:file))
     endif
   endfunction
+  autocmd MyAutoCmd BufWritePost * call s:add_permission_x()
 endif
 
 
 function! s:delte_trailing_whitespace()
   let l:cursor = getpos('.')
-  silent! %s/[ \t]\+$//g
+  silent! %s/\s\+$//g
   call setpos('.', l:cursor)
 endfunction
-command! DeleteTrailingWhitespace call s:delte_trailing_whitespace()
-command! DeleteBlankLines :g /^$/d
-command! -nargs=1 -complete=file Rename f <args> | call delete(expand('#'))
-command! -nargs=1 -complete=file E tabedit <args>
-command! Q tabclose <args>
+command! DeleteTrailingWhitespace  call s:delte_trailing_whitespace()
+command! DeleteBlankLines  :g /^$/d
+command! -nargs=1 -complete=file Rename  file <args> | call delete(expand('#'))
+command! -nargs=1 -complete=file E  tabedit <args>
+command! Q  tabclose <args>
 
 " Highlight cursor position. (Verticaly and horizontaly)
 command! ToggleCursorHighlight
@@ -613,49 +655,47 @@ nnoremap <silent> <Leader>h :<C-u>ToggleCursorHighlight<CR>
 
 
 " FullScreen
-if s:is_windows
-  command! FullSize call s:full_size()
+if g:is_windows
+  command! FullSize  call s:full_size()
 
   if s:is_cui
-    if has('vim_starting')
+    if s:at_startup
       let s:is_fullsize = 0
-      let s:lines   = 0
-      let s:columns = 0
-      let s:x_pos   = ''
-      let s:y_pos   = ''
+      let s:lines       = 0
+      let s:columns     = 0
+      let s:winpos_cmd  = ''
     endif
     autocmd MyAutoCmd VimLeave *
           \   if s:is_fullsize
-          \ |   exec 'winpos' . s:x_pos . s:y_pos
+          \ |   exec s:winpos_cmd
           \ | endif
     function! s:full_size()
       if s:is_fullsize
-        exec 'winpos' . s:x_pos . s:y_pos
+        exec s:winpos_cmd
         let &lines   = s:lines
         let &columns = s:columns
         let s:is_fullsize = 0
       else
-        let s:lines   = &lines
-        let s:columns = &columns
-        let s:wstrlst = split(s:get_winpos_strs(), ',')
-        let s:x_pos   = s:wstrlst[0][2:]
-        let s:y_pos   = s:wstrlst[1][2:]
+        let s:lines      = &lines
+        let s:columns    = &columns
+        let s:winpos_cmd = s:get_winpos_cmd()
         winpos -8 -8
         set lines=999 columns=999
         let s:is_fullsize = 1
       endif
     endfunction
-    function! s:get_winpos_strs()
+    function! s:get_winpos_cmd()
       let l:wstr = ''
       redir => l:wstr
       silent! winpos
       redir END
       let l:wstr = substitute(l:wstr, '[\r\n]', '', 'g')
-      return l:wstr[17:]
+      let l:wstrlst = split(l:wstr[17 :], ',')
+      return 'winpos' . l:wstrlst[0][2 :] . l:wstrlst[1][2 :]
     endfunction
 
   else
-    if has('vim_starting')
+    if s:at_startup
       let s:is_fullsize = 0
     endif
     function! s:full_size()
@@ -710,7 +750,7 @@ if filereadable($VIM . '/vimrc') && filereadable($VIM . '/ViMrC')
 endif
 
 " In Windows, if $VIM is not include in $PATH, .exe cannot be found.
-if s:is_windows && $PATH !~? '\(^\|;\)' . escape($VIM, '\\') . '\(;\|$\)'
+if g:is_windows && $PATH !~? '\(^\|;\)' . escape($VIM, '\\') . '\(;\|$\)'
   let $PATH = $VIM . ';' . $PATH
 endif
 " }}}
@@ -722,9 +762,9 @@ endif
 " ------------------------------------------------------------
 " Character-code and EOL-code {{{
 " ------------------------------------------------------------
-if s:is_windows
+if g:is_windows
   set fenc=utf-8
-  set termencoding=cp932
+  set tenc=cp932
   if s:is_cui
     set enc=cp932
   else
@@ -732,18 +772,18 @@ if s:is_windows
   endif
 endif
 
-if s:is_cygwin
+if g:is_cygwin
   if &term ==# 'xterm'       " In mintty
     " Change cursor shape depending on mode.
     let &t_ti .= "\e[1 q"
     let &t_SI .= "\e[5 q"
     let &t_EI .= "\e[1 q"
     let &t_te .= "\e[0 q"
-    set termencoding=utf-8
+    set tenc=utf-8
   elseif &term ==# 'cygwin'  " In command-prompt
     set enc=utf-8
     set fenc=utf-8
-    set termencoding=utf-8
+    set tenc=utf-8
   endif
 endif
 
@@ -796,10 +836,15 @@ function! s:insert_template(filename)
   let l:fn = expand(a:filename)
   if !bufexists("%:p") && input(printf('Do you want to load template:"%s"? [y/N]', l:fn)) =~? '^y\%[es]$'
     exec '0r ' . l:fn
+    let l:row = search('<+CURSOR+>', 'cnw')
+    let l:col = stridx(getline(l:row), '<+CURSOR+>')
+
     silent! %s/<+AUTHOR+>/koturn 0;/g
     silent! exec '%s/<+DATE+>/' . strftime('%Y %m\/%d') . '/g'
     silent! exec '%s/<+FILE+>/' . fnamemodify(expand('%'), ':t') . '/g'
     silent! exec '%s/<+CLASS+>/' . fnamemodify(expand('%'), ':t:r') . '/g'
+    silent! %s/<+CURSOR+>//g
+    call setpos('.', [0, l:row, l:col, 0])
   endif
 endfunction
 
@@ -886,6 +931,10 @@ nnoremap <C-w># <C-w>s#
 " Move line to line as you see whenever wordwrap is set.
 nnoremap j gj
 nnoremap k gk
+nnoremap gj j
+nnoremap gk k
+" Paste at start of line.
+nnoremap <C-p>  <S-i><C-r>"<Esc>
 " Toggle relativenumber.
 """""" if v:version >= 703
 nnoremap <silent> <Leader>l :<C-u>setl relativenumber!<CR>
@@ -899,18 +948,26 @@ nnoremap <silent> <Esc>h <C-w><
 nnoremap <silent> <Esc>j <C-w>+
 nnoremap <silent> <Esc>k <C-w>-
 nnoremap <silent> <Esc>l <C-w>>
+" Change tab.
+nnoremap <C-Tab>   gt
+nnoremap <S-C-Tab> Gt
 
 " Cursor-move setting at insert-mode.
 inoremap <C-h> <Left>
 inoremap <C-j> <Down>
 inoremap <C-k> <Up>
 inoremap <C-l> <Right>
+" Like Emacs.
+inoremap <C-f> <Right>
+inoremap <C-b> <Left>
+inoremap <silent> <C-d> <Del>
+inoremap <silent> <C-e> <Esc>$a
 " Insert a blank line in insert mode.
 inoremap <C-o> <Esc>o
 " Easy <Esc> in insert-mode.
 inoremap jj <Esc>
 " No wait for <Esc>.
-if s:is_unix && s:is_cui
+if g:is_unix && s:is_cui
   inoremap <silent> <ESC> <ESC>
   inoremap <silent> <C-[> <ESC>
 endif
@@ -950,9 +1007,11 @@ vnoremap ( t(
 vnoremap < <gv
 vnoremap > >gv
 " Paste yanked string vertically.
-vnoremap <C-p> I<C-r>"<ESC><ESC>
+vnoremap <C-p> I<C-r>"<ESC>
 " Sequencial copy
 vnoremap <silent> <M-p> "0p<CR>
+" replace selected words.
+vnoremap <C-r> y:%s/<C-r>"/
 " Select current position to EOL.
 vnoremap v $<Left>
 
@@ -972,9 +1031,9 @@ noremap  <silent> <S-F5> <Esc>:sp +enew<CR>:r !make<CR>
 noremap! <silent> <S-F5> <Esc>:sp +enew<CR>:r !make<CR>
 
 " Open .vimrc
-noremap  <silent> <Space>c <Esc>:e $MYVIMRC<CR>
+noremap  <silent> <Space>c <Esc>:edit $MYVIMRC<CR>
 " Open .gvimrc
-noremap  <silent> <Space>g <Esc>:e $MYGVIMRC<CR>
+noremap  <silent> <Space>g <Esc>:edit $MYGVIMRC<CR>
 if s:is_cui
   " Reload .vimrc.
   noremap  <silent> <F12> :<C-u>source $MYVIMRC<CR>
@@ -985,8 +1044,8 @@ else
   noremap! <silent> <F12> <Esc>:source $MYVIMRC<CR><Esc>:source $MYGVIMRC<CR>
 endif
 
-noremap  <silent> <F7> <Esc>:e $DOTVIM/template/template.cc<CR>
-noremap! <silent> <F7> <Esc>:e $DOTVIM/template/template.cc<CR>
+noremap  <silent> <F7> <Esc>:edit $DOTVIM/template/template.cc<CR>
+noremap! <silent> <F7> <Esc>:edit $DOTVIM/template/template.cc<CR>
 
 
 

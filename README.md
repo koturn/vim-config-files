@@ -83,47 +83,60 @@ command! ToggleCursorHighlight
 ~~~~
 
 
-#### 3. setとlet
-オプションの値設定は、極力setを用いる。
-変数に入っている値を設定するときには、letを用いてもよい。
+#### 3. setとletとexecute
+オプションの値設定は、極力setを用いる。  
+変数に入っている値を設定するときには、letを用いてもよい。  
+また、executeでコマンドを実行するのは、必要な場合を除き、なるべく避けること。
 
 例:
 ~~~~VimL
 set columns=100
 let &lines = s:lines
+
+let s:posx = '10'
+let s:posy = '10'
+execute 'winpos ' . s:posx . ' ' . s:posy
 ~~~~
 letを用いる場合、代入演算子(=)の前後に1スペース以上空けること。
 
 
 #### 4. 演算子の記述
-前項の内容と少し重複するが、基本的に演算子の前後には1スペース以上を開けること。
+前項の内容と少し重複するが、基本的に演算子の前後には1スペース以上を開けること。  
+文字列やリストの要素の取り出し(s:list[2 : 4]など)のコロンの前後に1スペース設けること。  
+これは、範囲指定に変数を用いた場合の視認性のためであり、無用なシンタックスエラーを避けるためである。  
+(let s:substr1 = s:str[s:a: 15]は、シンタックスエラー)
 
 例:
 ~~~~VimL
 let s:a = 10
 let s:b = 20
 let s:c = s:a + s:b
+let s:str     = 'abcdefghijklmnopqrstuvwxyz'
+let s:substr1 = s:str[5 : 15]
+let s:substr2 = s:str[s:a : a:b]
 ~~~~
 
 
 #### 5. オプションやコマンドの略称
-略称は基本的に用いない。
+略称は基本的に用いない。  
 しかし、以下の表にあるものは、表の通りの略称を用いても良い。
 
 項目                 | 省略表記
----------------------|---------
+---------------------|-------------------------
 encoding             | enc
+execute              | exec
 filencoding          | fenc
 filetype             | ft
-execute              | exec
 setlocal             | setl
-autogroup内のautocmd | au
+setglobal            | setg
+termencoding         | tenc
+autogroup内のautocmd | au(autocmd!は省略しない)
 autocmd中のhighlight | hi
 
 
 #### 6. その他
 ###### 6-1. 変数のスコープ
-変数や関数のスコープはできる限り小さくすること。
+変数や関数のスコープはできる限り小さくすること。  
 また、unletで変数消去も試みること。
 
 例:
@@ -134,7 +147,7 @@ function! s:get_winpos_strs()
   silent! winpos
   redir END
   let l:wstr = substitute(l:wstr, '[\r\n]', '', 'g')
-  return l:wstr[17:]
+  return l:wstr[17 :]
 endfunction
 ~~~~
 
@@ -150,8 +163,8 @@ nnoremap <silent> <Leader>l :setl relativenumber!<CR>
 ~~~~
 
 ###### 6-3. リローダブル
-.vimrc, .gvimrcはリローダブルにすること。
-(function!, autocmd!を用いる)
+.vimrc, .gvimrcはリローダブルにすること。  
+(function!, autocmd!を用いるなど)  
 ただし、autocmd!は時間がかかるコマンドなので、augroupをなるべく1つにまとめること。
 
 例:
@@ -172,3 +185,38 @@ augroup END
 ~~~~
 
 また、いかなるタイミングで各種autocmdが発行されても影響が出ないようにすること。
+
+###### 6-4. 文字列リテラル
+文字列リテラルには、なるべくシングルクオートを用いること。  
+特殊文字を考慮する場合のみ、ダブルクオートを用いる。
+
+###### 6-5. 行連結
+オートコマンドやコマンド定義などで、過度な行連結は避けること。(多くても5行程度?)  
+あまりに長くなる場合は、関数を定義し、コマンドからその関数を呼び出すようにすること。  
+これは、行連結には時間がかかるためである。
+
+悪い例:
+~~~~VimL
+autocmd MyAutoCmd BufWritePost *
+  \   let l:file = expand('%:p')
+  \ | if getline(1) =~# '^#!' && !executable(l:file)
+  \ |   silent! call vimproc#system('chmod a+x ' . shellescape(l:file))
+  \ | endif
+~~~~
+
+良い例:
+~~~~VimL
+function! s:add_permission_x()
+  let l:file = expand('%:p')
+  if getline(1) =~# '^#!' && !executable(l:file)
+    silent! call vimproc#system('chmod a+x ' . shellescape(l:file))
+  endif
+endfunction
+autocmd MyAutoCmd BufWritePost * call s:add_permission_x()
+~~~~
+
+
+
+
+###### 6-6. キーバインド
+なるべくデフォルトのキーバインドに対する上書きをしないこと。

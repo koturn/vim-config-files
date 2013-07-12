@@ -11,7 +11,6 @@
 " ------------------------------------------------------------
 " Load plugins only for GUI {{{
 " ------------------------------------------------------------
-" http://nanasi.jp/articles/vim/movewin_vim.html
 NeoBundleLazy 'movewin.vim', {
       \ 'autoload': {'commands' : 'MoveWin'}
       \}
@@ -34,20 +33,19 @@ nmap - <Plug>(fontzoom-smaller)
 " ------------------------------------------------------------
 " Basic settings {{{
 " ------------------------------------------------------------
-let s:is_windows = has('win16') || has('win32') || has('win64')
 set guioptions=    " Hide menubar and toolbar.
 set winaltkeys=no  " Turns of the Alt key bindings to the gui menu
+set cursorline cursorcolumn
 
 " Change cursor color depending on state of IME.
 if has('multi_byte_ime') || has('xim')
-  autocmd MyAutoCmd Colorscheme * highlight CursorIM guifg=NONE guibg=Orange
+  autocmd MyAutoCmd Colorscheme * hi CursorIM guifg=NONE guibg=Orange
   " Default state of IME on insert mode and searching mode.
   set iminsert=0 imsearch=0  " for no KaoriYa WIN gvim
 endif
 
-if s:is_windows
+if g:is_windows
   set guifont=Consolas:h9 guifontwide=MS_Gothic:h9
-
   " Setting for printing.
   set printoptions=number:y,header:0,syntax:y,left:5pt,right:5pt,top:10pt,bottom:10pt
   set printfont=Consolas:h9
@@ -59,19 +57,6 @@ if s:is_windows
 endif
 
 
-" Singleton
-if has('clientserver') && has('gui_running') && argc()
-  let s:running_vim_list = filter(
-        \ split(serverlist(), '\n'),
-        \ 'v:val !=? v:servername')
-  if !empty(s:running_vim_list)
-    silent exec '!start gvim'
-          \ '--servername' s:running_vim_list[0]
-          \ '--remote-tab-silent' join(argv(), ' ')
-    quitall!
-  endif
-  unlet s:running_vim_list
-endif
 
 
 " ------------------------------------------------------------
@@ -91,9 +76,19 @@ set mousehide
 " ------------------------------------------------------------
 " END of .gvimrc {{{
 " ------------------------------------------------------------
-if has('kaoriya') && s:is_windows
+if has('kaoriya') && g:is_windows
   gui
-  set transparency=215
+  if g:is_windows
+    augroup MyAutoCmd
+      autocmd FocusGained * set transparency=215 titlestring&
+      autocmd FocusLost   * set transparency=180 titlestring=Forcus\ was\ lost
+    augroup END
+  elseif g:is_mac
+    augroup MyAutoCmd
+      autocmd FocusGained * set transparency=15 titlestring&
+      autocmd FocusLost   * set transparency=30 titlestring=Forcus\ was\ lost
+    augroup END
+  endif
 endif
 colorscheme koturn
 filetype plugin indent on
