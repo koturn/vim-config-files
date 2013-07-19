@@ -11,10 +11,6 @@
 " ------------------------------------------------------------
 " Load plugins only for GUI {{{
 " ------------------------------------------------------------
-NeoBundleLazy 'movewin.vim', {
-      \ 'autoload': {'commands' : 'MoveWin'}
-      \}
-
 NeoBundleLazy 'thinca/vim-fontzoom', {
       \ 'autoload' : {
       \   'commands' : 'Fontzoom',
@@ -22,12 +18,10 @@ NeoBundleLazy 'thinca/vim-fontzoom', {
       \     ['n', '<Plug>(fontzoom-larger)'],
       \     ['n', '<Plug>(fontzoom-smaller)']
       \]}}
-nmap + <Plug>(fontzoom-larger)
-nmap - <Plug>(fontzoom-smaller)
+nmap +  <Plug>(fontzoom-larger)
+nmap -  <Plug>(fontzoom-smaller)
 " }}}
 " ************** The end of etting of NeoBundle **************
-
-
 
 
 " ------------------------------------------------------------
@@ -36,6 +30,17 @@ nmap - <Plug>(fontzoom-smaller)
 set guioptions=    " Hide menubar and toolbar.
 set winaltkeys=no  " Turns of the Alt key bindings to the gui menu
 set cursorline cursorcolumn
+
+function! BalloonExpr()
+  let l:lnum = foldclosed(v:beval_lnum)
+  if l:lnum == -1
+    return ''
+  endif
+  let l:lines = getline(l:lnum, foldclosedend(l:lnum))
+  return iconv(join(len(l:lines) > &lines ? l:lines[: &lines] : l:lines, "\n"), &enc, &tenc)
+endfunction
+set balloonexpr=BalloonExpr()
+set ballooneval
 
 " Change cursor color depending on state of IME.
 if has('multi_byte_ime') || has('xim')
@@ -47,16 +52,16 @@ endif
 if g:is_windows
   set guifont=Consolas:h9 guifontwide=MS_Gothic:h9
   " Setting for printing.
-  set printoptions=number:y,header:0,syntax:y,left:5pt,right:5pt,top:10pt,bottom:10pt
-  set printfont=Consolas:h9
+  if has('printer')
+    set printoptions=number:y,header:0,syntax:y,left:5pt,right:5pt,top:10pt,bottom:10pt
+    set printfont=MS_Mincho:h12:cSHIFTJIS
+  endif
 
   " Setting for menubar
   " set langmenu=ja_jp.utf-8
   " source $VIMRUNTIME/delmenu.vim
   " source $VIMRUNTIME/menu.vim
 endif
-
-
 
 
 " ------------------------------------------------------------
@@ -71,25 +76,25 @@ set mousehide
 " }}}
 
 
-
-
 " ------------------------------------------------------------
 " END of .gvimrc {{{
 " ------------------------------------------------------------
-if has('kaoriya') && g:is_windows
+if has('kaoriya')
   gui
   if g:is_windows
     augroup MyAutoCmd
-      autocmd FocusGained * set transparency=215 titlestring&
-      autocmd FocusLost   * set transparency=180 titlestring=Forcus\ was\ lost
+      au FocusGained,WinEnter * set transparency=215 titlestring&
+      au FocusLost * set transparency=180 titlestring=Forcus\ was\ lost
     augroup END
   elseif g:is_mac
     augroup MyAutoCmd
-      autocmd FocusGained * set transparency=15 titlestring&
-      autocmd FocusLost   * set transparency=30 titlestring=Forcus\ was\ lost
+      au FocusGained,WinEnter * set transparency=15 titlestring&
+      au FocusLost * set transparency=30 titlestring=Forcus\ was\ lost
     augroup END
   endif
 endif
+
+unlet g:is_windows g:is_cygwin g:is_mac g:is_unix g:at_startup
 colorscheme koturn
 filetype plugin indent on
 " }}}

@@ -55,12 +55,11 @@ $ git clone git://github.com/Shougo/neobundle.vim ~/.vim/bundle/neobundle.vim
 " gmail.vim(https://github.com/yuratomo/gmail.vim)の
 " g:gmail_user_nameに設定される値
 " この変数を定義しなければ、g:gmail_user_nameには、.vimrcで空文字列が代入される。
-let g:gmail_address = 'jeak.koutan.apple@gmail.com'
+let g:gmail_address = 'xxxx.yyyy.zzzz@gmail.com'
 
 " previm(https://github.com/kannokanno/previm)の
 " g:previm_open_cmdに設定される値
 " この変数を定義しなければ、g:previm_open_cmdには、.vimrcで空文字列が代入される。
-let g:gmail_address = 'jeak.koutan.apple@gmail.com'
 let g:browser_cmd = 'C:\path\to\browser\chrome.exe'
 ~~~~
 
@@ -121,7 +120,7 @@ let &lines = s:lines
 
 let s:posx = '10'
 let s:posy = '10'
-execute 'winpos ' . s:posx . ' ' . s:posy
+exec 'winpos ' . s:posx . ' ' . s:posy
 ~~~~
 letを用いる場合、代入演算子(=)の前後に1スペース以上空けること。
 
@@ -139,9 +138,9 @@ let s:b = 20
 let s:c = s:a + s:b
 let s:str     = 'abcdefghijklmnopqrstuvwxyz'
 let s:substr1 = s:str[5 : 15]
-let s:substr2 = s:str[s:a : a:b]
+let s:substr2 = s:str[s:a : s:b]
 " これはシンタックスエラー
-" let s:substr3 = s:str[s:a: a:b]
+" let s:substr3 = s:str[s:a: s:b]
 ~~~~
 
 
@@ -155,6 +154,7 @@ encoding             | enc
 execute              | exec
 filencoding          | fenc
 filetype             | ft
+runtimepath          | rtp
 setlocal             | setl
 setglobal            | setg
 termencoding         | tenc
@@ -188,7 +188,7 @@ ifとendifをダブルクオート6つでコメントアウトする。
 
 ~~~~VimL
 """""" if v:version >= 703
-nnoremap <silent> <Leader>l :setl relativenumber!<CR>
+nnoremap <silent> <Leader>l  :<C-u>setl relativenumber!<CR>
 """""" endif
 ~~~~
 
@@ -207,7 +207,7 @@ augroup END
 autocmd MyAutoCmd BufWritePre * call s:auto_mkdir(expand('<afile>:p:h'), v:cmdbang)
 augroup MyAutoCmd
   au ColorScheme * hi WhitespaceEOL term=underline ctermbg=Blue guibg=Blue
-  au VimEnter,WinEnter * call matchadd('WhitespaceEOL', '\s\+$')
+  au VimEnter,WinEnter * call matchadd('WhitespaceEOL', ' \+$')
   au ColorScheme * hi TabEOL term=underline ctermbg=DarkGreen guibg=DarkGreen
   au VimEnter,WinEnter * call matchadd('TabEOL', '\t\+$')
   au Colorscheme * hi JPSpace term=underline ctermbg=Red guibg=Red
@@ -230,10 +230,10 @@ augroup END
 
 ~~~~VimL
 autocmd MyAutoCmd BufWritePost *
-  \   let l:file = expand('%:p')
-  \ | if getline(1) =~# '^#!' && !executable(l:file)
-  \ |   silent! call vimproc#system('chmod a+x ' . shellescape(l:file))
-  \ | endif
+      \   let l:file = expand('%:p')
+      \ | if getline(1) =~# '^#!' && !executable(l:file)
+      \ |   silent! call vimproc#system('chmod a+x ' . shellescape(l:file))
+      \ | endif
 ~~~~
 
 良い例:
