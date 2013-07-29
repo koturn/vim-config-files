@@ -8,16 +8,30 @@
 "
 " This .vimrc was mainly written for Windows.
 " But you can also use in Cygwin or UNIX/Linux.
-" In Windows, you have to put HOME-directory.
+" In Windows, you have to put this in HOME-directory.
 " ============================================================
 " ------------------------------------------------------------
 " Initialize and Variables {{{
 " ------------------------------------------------------------
+" Variables for various environment.
+let g:is_windows =  has('win16') || has('win32') || has('win64')
+let g:is_cygwin  =  has('win32unix')
+let g:is_mac     = !g:is_windows && (has('mac') || has('macunix') || has('gui_macvim')
+      \ || (!isdirectory('/proc') && executable('sw_vers')))
+let g:is_unix    =  has('unix')
+let s:is_cui     = !has('gui_running')
+let g:at_startup =  has('vim_starting')
+if !exists($MYGVIMRC)
+  let $MYGVIMRC = expand('~/.gvimrc')
+endif
+let $DOTVIM = $HOME . '/.vim'
+let $NEOBUNDLE_DIR = expand('$DOTVIM/bundle/')
+" If $DOTVIM/.private.vim is exists, ignore error.
+silent! source $DOTVIM/.private.vim
+
 augroup MyAutoCmd
   autocmd!
 augroup END
-let g:at_startup = has('vim_starting')
-
 " Measure startup time.
 if g:at_startup && has('reltime')
   let s:startuptime = reltime()
@@ -27,22 +41,6 @@ if g:at_startup && has('reltime')
         \ | echomsg 'startuptime: ' . reltimestr(s:startuptime)
         \ | unlet s:startuptime
 endif
-
-" Variables for various environment.
-let g:is_windows =  has('win16') || has('win32') || has('win64')
-let g:is_cygwin  =  has('win32unix')
-let g:is_mac     = !g:is_windows && (has('mac') || has('macunix') || has('gui_macvim')
-      \ || (!isdirectory('/proc') && executable('sw_vers')))
-let g:is_unix    =  has('unix')
-let s:is_cui     = !has('gui_running')
-
-if !exists($MYGVIMRC)
-  let $MYGVIMRC = expand('~/.gvimrc')
-endif
-let $DOTVIM = $HOME . '/.vim'
-let $NEOBUNDLE_DIR = expand('$DOTVIM/bundle/')
-" If $DOTVIM/.private.vim is exists, ignore error.
-silent! source $DOTVIM/.private.vim
 
 " Singleton (if !s:is_cui)
 if has('clientserver')
@@ -76,11 +74,11 @@ if g:at_startup && has('kaoriya')
     for l:path in split(glob($VIM . '/plugins/*'), '\n')
       if l:path !~# '\~$' && isdirectory(l:path)
         let &rtp .= ',' . l:path
-      end
+      endif
     endfor
-    command! FullPlugin  echo 'Plugins were already installed.'
+    delcommand FullInstall
   endfunction
-  command! FullPlugin  call s:full_plugin()
+  command! FullInstall  call s:full_plugin()
 endif
 " }}}
 
@@ -112,7 +110,6 @@ if !isdirectory($NEOBUNDLE_DIR . '/neobundle.vim')
 endif
 
 if g:at_startup
-  " source $VIMRUNTIME/macros/editexisting.vim
   set rtp+=$NEOBUNDLE_DIR/neobundle.vim
 endif
 call neobundle#rc()
@@ -125,16 +122,24 @@ NeoBundle 'Shougo/vimproc', {
       \   'unix'    : 'make -f make_unix.mak'
       \}}
 
-" NeoBundle 'bling/vim-airline'
 NeoBundleLazy 'Shougo/unite.vim', {
       \ 'autoload' : {
       \   'commands' : [{
       \     'name' : 'Unite',
       \     'complete' : 'customlist,unite#complete_source'
       \},]}}
-nnoremap [unite]  <Nop>
+NeoBundleLazy 'ujihisa/unite-colorscheme', {
+      \ 'autoload' : {'unite_sources' : 'colorscheme'}
+      \}
+NeoBundleLazy 'ujihisa/unite-font', {
+      \ 'autoload' : {'unite_sources' : 'font'}
+      \}
+nnoremap [unite] <Nop>
 nmap ,u  [unite]
-noremap <silent> [unite]u  :<C-u>Unite
+noremap <silent> [unite]b  :<C-u>UniteWithBufferDir -buffer-name=files -start-insert file file/new<CR>
+noremap <silent> [unite]c  :<C-u>Unite -auto-preview colorscheme<CR>
+noremap <silent> [unite]f  :<C-u>Unite -auto-preview font<CR>
+noremap <silent> [unite]m  :<C-u>Unite -buffer-name=files -start-insert buffer file_rec/async:! file file_mru<CR>
 
 if has('lua') && v:version >= 703 && has('patch825')
   NeoBundleLazy 'Shougo/neocomplete.vim', {
@@ -150,13 +155,23 @@ else
   let g:neocomplcache_enable_at_startup = 1
 endif
 
-inoremap <expr><TAB>  pumvisible() ? '<C-n>' : '<TAB>'
 NeoBundleLazy 'Shougo/neosnippet', {
       \ 'autoload' : {'insert' : 1}
       \}
+imap <C-k>  <Plug>(neosnippet_expand_or_jump)
+smap <C-k>  <Plug>(neosnippet_expand_or_jump)
+imap <expr><TAB>  neosnippet#expandable() <Bar><Bar> neosnippet#jumpable() ?
+      \ '<Plug>(neosnippet_expand_or_jump)' : pumvisible() ? '<C-n>' : '<TAB>'
+smap <expr><TAB>  neosnippet#expandable() <Bar><Bar> neosnippet#jumpable() ?
+      \ '<Plug>(neosnippet_expand_or_jump)' : '<TAB>'
+if has('conceal')
+  set conceallevel=2 concealcursor=i
+endif
 
-
-NeoBundle 'fholgado/minibufexpl.vim'
+" I want to show startup time when vim is started, so lazy-load this plug-in.
+NeoBundleLazy 'bling/vim-bufferline', {
+      \ 'autoload' : {'insert' : 1}
+      \}
 NeoBundle 'nathanaelkane/vim-indent-guides'
 let g:indent_guides_enable_on_vim_startup = 1
 let g:indent_guides_start_level = 1
@@ -167,9 +182,15 @@ augroup MyAutoCmd
   au ColorScheme * hi IndentGuidesEven ctermbg=darkblue  guibg=#6666ff
 augroup END
 
+NeoBundleLazy 'osyo-manga/vim-reanimate', {
+      \ 'autoload' : {'commands' : ['ReanimateSave', 'ReanimateLoad']}
+      \}
+let g:reanimate_save_dir = $DOTVIM . '/save'
+let g:reanimate_default_save_name = 'reanimate'
+let g:reanimate_sessionoptions = 'curdir,folds,help,localoptions,slash,tabpages,winsize'
 NeoBundle 'hrp/EnhancedCommentify'
-" NeoBundle 'kana/vim-smartinput'
 
+" NeoBundle 'kana/vim-smartinput'
 
 """""" if executable('w3m')
 NeoBundleLazy 'yuratomo/w3m.vim', {
@@ -255,9 +276,18 @@ nnoremap <Leader>we  :<C-u>Ref webdict wiki_en<Space>
 nnoremap <Leader>wj  :<C-u>Ref webdict wiki<Space>
 
 autocmd MyAutoCmd Filetype ref-webdict setl number
+if g:is_cygwin
+  autocmd MyAutoCmd Filetype ref-webdict setl enc=cp932
+endif
 let g:ref_open = 'split'
 " If you don't specify a following setting, webdict-results are garbled.
-let g:ref_source_webdict_cmd = 'lynx -dump -nonumbers %s'
+let s:pauth = get(g:, 'pauth', '')
+if s:pauth ==# ''
+  let g:ref_source_webdict_cmd = 'lynx -dump -nonumbers %s'
+else
+  let g:ref_source_webdict_cmd = 'lynx -dump -nonumbers -pauth=' . s:pauth . ' %s'
+endif
+unlet s:pauth
 " Default webdict site
 let g:ref_source_webdict_sites.default = 'ej'
 " Filters for output. Remove the first few lines.
@@ -353,8 +383,8 @@ function! g:my_vimshell_dynamic_prompt()
         \]
   return anim[g:my_vimshell_prompt_counter % len(anim)]
 endfunction
-" let g:vimshell_prompt = "('v ')/$ "
-let g:vimshell_prompt_expr = 'g:my_vimshell_dynamic_prompt()." $ "'
+" let g:vimshell_prompt = "('v ')$ "
+let g:vimshell_prompt_expr = 'g:my_vimshell_dynamic_prompt() . " $ "'
 let g:vimshell_prompt_pattern = '^([ ´:_:`]\{5}) \$ '
 let g:vimshell_secondary_prompt = '> '
 let g:vimshell_user_prompt = 'getcwd()'
@@ -385,6 +415,10 @@ NeoBundleLazy 'java_getset.vim', {
       \ 'autoload' : {'filetypes' : 'java'}
       \}
 
+NeoBundleLazy 'jiangmiao/simple-javascript-indenter', {
+      \ 'autoload' : {'filetypes' : 'javascript'}
+      \}
+
 NeoBundleLazy 'jcommenter.vim', {
       \ 'autoload' : {'filetypes' : 'java'}
       \}
@@ -410,7 +444,6 @@ NeoBundleLazy 'tagexplorer.vim', {
       \ 'autoload' : {
       \   'filetypes' : ['cpp', 'java', 'perl', 'python', 'ruby']
       \}}
-set tags=tags
 """""" endif
 
 NeoBundleLazy 'rbtnn/vimconsole.vim', {
@@ -438,6 +471,11 @@ let g:quickrun_config = {
       \ 'ruby'   : {'type' : 'my_ruby'},
       \ 'r'      : {'type' : 'my_r'},
       \ 'tex'    : {'type' : 'my_tex'},
+      \ 'kuin' : {
+      \   'command' : 'Kuin.exe',
+      \   'cmdopt'  : '-nw',
+      \   'exec'    : '%C %S %o',
+      \ },
       \ 'my_c' : {
       \   'command' : 'gcc',
       \   'cmdopt'  : '-Wall -Wextra -fsyntax-only',
@@ -592,7 +630,6 @@ NeoBundleLazy 'daisuzu/facebook.vim', {
 " }}}
 " ************** The end of etting of NeoBundle **************
 
-
 " ------------------------------------------------------------
 " Basic settings {{{
 " ------------------------------------------------------------
@@ -602,6 +639,8 @@ set shortmess+=I
 set shellslash
 " Work with clipboard.
 set clipboard=unnamed,autoselect
+" Enable square-selecting if charactors don't exist.
+set virtualedit=block
 " Turn off word wrap.
 set nowrap
 " Turn off start a new line sutomatically.
@@ -628,13 +667,10 @@ set lazyredraw
 " Use vim in secure.
 set secure
 " Swap file.
-" set directory=~/vimfiles/swap/
 set noswapfile
 " Backup file.
-" set backupdir=~/vimfiles/backup/
 set nobackup nowritebackup
 " file of '_viminfo'.
-" set viminfo+=n~/vimfiles/viminfo/
 set viminfo=
 " Show vertical line at column-80
 set colorcolumn=80
@@ -646,6 +682,11 @@ set expandtab    smarttab
 set shiftwidth=2 tabstop=2 softtabstop=2
 " Show line number.
 set number
+" Setting for printing.
+if has('printer') && g:is_windows
+  set printoptions=number:y,header:0,syntax:y,left:5pt,right:5pt,top:10pt,bottom:10pt
+  set printfont=Consolas:h9 printmbfont=r:MS_Gothic:h10,a:yes
+endif
 
 
 " ------------------------------------------------------------
@@ -678,8 +719,10 @@ endif
 
 " Setting for the system that not identify upper cases and lower cases.
 "   (example: DOS / Windows / MacOS)
-if filereadable($VIM . '/vimrc') && filereadable($VIM . '/ViMrC')
+if filereadable($HOME . '/.vimrc') && filereadable($HOME . '/.ViMrC')
   set tags=./tags,tags  " Prevent duplication of tags file
+else
+  set tags=./tags
 endif
 
 " In Windows, if $VIM is not include in $PATH, .exe cannot be found.
@@ -709,17 +752,17 @@ if g:is_windows
 endif
 
 if g:is_cygwin
-  if &term ==# 'xterm'       " In mintty
+  set enc =utf-8
+  set fenc=utf-8
+  set tenc=utf-8
+  if &term ==# 'xterm'  " In mintty
     " Change cursor shape depending on mode.
     let &t_ti .= "\e[1 q"
     let &t_SI .= "\e[5 q"
     let &t_EI .= "\e[1 q"
     let &t_te .= "\e[0 q"
     set tenc=utf-8
-  elseif &term ==# 'cygwin'  " In command-prompt
-    set enc=utf-8
-    set fenc=utf-8
-    set tenc=utf-8
+  """""" elseif &term ==# 'cygwin'  " In command-prompt
   endif
 endif
 
@@ -782,7 +825,10 @@ function! s:toggle_tab_space(width)
   call setpos('.', l:cursor)
 endfunction
 nnoremap <silent> <Leader><Tab>  :<C-u>call <SID>toggle_tab_space(&ts)<CR>
-
+command! -nargs=1 Indent
+      \   let &sw  = <q-args>
+      \ | let &ts  = <q-args>
+      \ | let &sts = <q-args>
 
 " Make directory automatically.
 function! s:auto_mkdir(dir, force)
@@ -827,10 +873,32 @@ endfunction
 command! -nargs=0 -count=0 Lcd  call s:cmd_lcd(<count>)
 
 
+" Close buffer not closing window
+command! Ebd  call EBufdelete()
+function! EBufdelete()
+  let l:current_bufnr   = bufnr("%")
+  let l:alternate_bufnr = bufnr("#")
+  if buflisted(l:alternate_bufnr)
+    buffer #
+  else
+    bnext
+  endif
+  if buflisted(l:current_bufnr)
+    exec 'silent bwipeout' . l:current_bufnr
+    " If bwipeout is failed, restore buffer of upper windows.
+    if bufloaded(l:current_bufnr) != 0
+      exec 'buffer ' . l:current_bufnr
+    endif
+  endif
+endfunction
+
+
 " Preview fold area.
 function! s:preview_fold(previewheight)
   let l:lnum = line('.')
-  if foldclosed(l:lnum) > -1
+  if foldclosed(l:lnum) <= -1
+    pclose
+  else
     let l:lines = getline(l:lnum, foldclosedend(l:lnum))
     if len(l:lines) > a:previewheight
       let l:lines = l:lines[: a:previewheight - 1]
@@ -849,8 +917,6 @@ function! s:preview_fold(previewheight)
     setl buftype=nofile noswapfile bufhidden=wipe previewwindow foldlevel=99 nowrap
     call append(0, l:lines)
     wincmd p
-  else
-    pclose
   endif
 endfunction
 nnoremap <silent> zp  :<C-u>call <SID>preview_fold(&previewheight)<CR>
@@ -894,27 +960,30 @@ command! Q  tabclose <args>
 
 " Highlight cursor position verticaly and horizontaly.
 command! ToggleCursorHighlight
-      \   if !&cursorline || !&cursorcolumn
-      \ |   setl   cursorline   cursorcolumn
+      \   if !&cursorline || !&cursorcolumn || &colorcolumn ==# ''
+      \ |   setl   cursorline   cursorcolumn colorcolumn=80
       \ | else
-      \ |   setl nocursorline nocursorcolumn
+      \ |   setl nocursorline nocursorcolumn colorcolumn=
       \ | endif
 nnoremap <silent> <Leader>h  :<C-u>ToggleCursorHighlight<CR>
+
+
+command! CloneToNewTab  exec 'tabnew ' . expand('%:p')
 " }}}
 
 
 " ------------------------------------------------------------
 " Setting for Visualize {{{
 " ------------------------------------------------------------
-" Show invisible characters. (like tabs and eol-character)
-set list
-" Format of invisible characters  to show.
-set listchars=eol:$,tab:>-,extends:<
+" Show invisible characters and define format of the characters.
+set list listchars=eol:$,tab:>-,extends:<
 augroup MyAutoCmd
   au ColorScheme * hi WhitespaceEOL term=underline ctermbg=Blue guibg=Blue
   au VimEnter,WinEnter * call matchadd('WhitespaceEOL', ' \+$')
   au ColorScheme * hi TabEOL term=underline ctermbg=DarkGreen guibg=DarkGreen
   au VimEnter,WinEnter * call matchadd('TabEOL', '\t\+$')
+  au ColorScheme * hi SpaceTab term=underline ctermbg=Magenta guibg=Magenta guisp=Magenta
+  au VimEnter,WinEnter * call matchadd('SpaceTab', ' \+\ze\t\|\t\+\ze ')
   au Colorscheme * hi JPSpace term=underline ctermbg=Red guibg=Red
   au VimEnter,WinEnter * call matchadd('JPSpace', '　')  " \%u3000
 augroup END
@@ -947,6 +1016,7 @@ augroup MyAutoCmd
   " ----------------------------------------------------------
   au Filetype cs     setl sw=4 ts=4 sts=4 noexpandtab
   au Filetype java   setl sw=4 ts=4 sts=4 noexpandtab
+  au Filetype kuin   setl sw=2 ts=2 sts=2 noexpandtab
   au Filetype python setl sw=4 ts=4 sts=4
   au Filetype make   setl sw=4 ts=4 sts=4 noexpandtab
 
@@ -975,35 +1045,39 @@ augroup END
 " ------------------------------------------------------------
 " Show status line at the second line from the last line.
 set laststatus=2
-set statusline=%<%f\ %m\ %r%h%w%{'[fenc='.(&fenc!=#''?&fenc:&enc).']\ [ff='.&ff.']\ [ft='.(&ft==#''?'null':&ft).']\ [ascii=0x'}%B]%=\ (%v,%l)/%L%8P
+if g:is_cygwin
+  set statusline=%<%f\ %m\ %r%h%w%{'[fenc='.(&fenc!=#''?&fenc:&enc).']\ [ff='.&ff.']\ [ft='.(&ft==#''?'null':&ft).']\ [ascii=0x'}%B]%=\ (%v,%l)/%L%8P
 
-" Change color of status line depending on mode.
-if has('syntax')
-  augroup MyAutoCmd
-    au InsertEnter * call s:hi_statusline(1)
-    au InsertLeave * call s:hi_statusline(0)
-    au ColorScheme * silent! let s:slhlcmd = 'highlight ' . s:get_highlight('StatusLine')
-  augroup END
-endif
-
-function! s:hi_statusline(mode)
-  if a:mode == 1
-    highlight StatusLine guifg=white guibg=MediumOrchid gui=none ctermfg=white ctermbg=DarkRed cterm=none
-  else
-    highlight clear StatusLine
-    silent exec s:slhlcmd
+  " Change color of status line depending on mode.
+  if has('syntax')
+    augroup MyAutoCmd
+      au InsertEnter * call s:hi_statusline(1)
+      au InsertLeave * call s:hi_statusline(0)
+      au ColorScheme * silent! let s:slhlcmd = 'highlight ' . s:get_highlight('StatusLine')
+    augroup END
   endif
-endfunction
 
-function! s:get_highlight(hi)
-  let l:hl = ''
-  redir => l:hl
+  function! s:hi_statusline(mode)
+    if a:mode == 1
+      highlight StatusLine guifg=white guibg=MediumOrchid gui=none ctermfg=white ctermbg=DarkRed cterm=none
+    else
+      highlight clear StatusLine
+      silent exec s:slhlcmd
+    endif
+  endfunction
+
+  function! s:get_highlight(hi)
+    let l:hl = ''
+    redir => l:hl
     exec 'highlight ' . a:hi
-  redir END
-  let l:hl = substitute(l:hl, '[\r\n]', '', 'g')
-  let l:hl = substitute(l:hl, 'xxx', '', '')
-  return l:hl
-endfunction
+    redir END
+    let l:hl = substitute(l:hl, '[\r\n]', '', 'g')
+    let l:hl = substitute(l:hl, 'xxx', '', '')
+    return l:hl
+  endfunction
+else
+  NeoBundle 'bling/vim-airline'
+endif
 " }}}
 
 
@@ -1013,12 +1087,13 @@ endfunction
 if g:is_mac
   noremap  ¥  \
   noremap! ¥  \
-  noremap  \  ¥\
+  noremap  \  ¥
   noremap! \  ¥
 endif
 
-" Turn off the highlight.
-nnoremap <silent> <Esc><Esc>  :<C-u>nohlsearch<CR><Esc>
+" Toggle search highlight
+nnoremap <silent> <Esc><Esc>    :<C-u>setl nohlsearch<CR>
+nnoremap <silent> <Space><Esc>  :<C-u>setl hlsearch! hlsearch?<CR>
 " Search the word nearest to the cursor in new window.
 nnoremap <C-w>*  <C-w>s*
 nnoremap <C-w>#  <C-w>s#
@@ -1031,17 +1106,21 @@ nnoremap gk   k
 nnoremap <C-p>  <S-i><C-r>"<Esc>
 " Toggle relativenumber.
 """""" if v:version >= 703
-nnoremap <silent> <Leader>l  :<C-u>setl relativenumber!<CR>
+nnoremap <silent> <Leader>l  :<C-u>setl rnu! rnu?<CR>
 """""" endif
+nnoremap <silent> <Leader>s  :<C-u>setl spell! spell?<CR>
+nnoremap <silent> <Leader>w  :<C-u>setl wrap!  wrap?<CR>
 " Resize window.
-nnoremap <silent> <M-h>   <C-w><
-nnoremap <silent> <M-j>   <C-w>+
-nnoremap <silent> <M-k>   <C-w>-
-nnoremap <silent> <M-l>   <C-w>>
-nnoremap <silent> <Esc>h  <C-w><
-nnoremap <silent> <Esc>j  <C-w>+
-nnoremap <silent> <Esc>k  <C-w>-
-nnoremap <silent> <Esc>l  <C-w>>
+nnoremap <silent> <M-<>   <C-w><
+nnoremap <silent> <M-+>   <C-w>+
+nnoremap <silent> <M-->   <C-w>-
+nnoremap <silent> <M-=>   <C-w>-
+nnoremap <silent> <M->>   <C-w>>
+nnoremap <silent> <Esc><  <C-w><
+nnoremap <silent> <Esc>+  <C-w>+
+nnoremap <silent> <Esc>-  <C-w>-
+nnoremap <silent> <Esc>=  <C-w>-
+nnoremap <silent> <Esc>>  <C-w>>
 " Change tab.
 nnoremap <C-Tab>    gt
 nnoremap <S-C-Tab>  Gt
@@ -1146,40 +1225,39 @@ noremap! <silent> <F7> <Esc>:edit $DOTVIM/template/template.cc<CR>
 " ------------------------------------------------------------
 " Force to use keybind of vim to move cursor.
 " ------------------------------------------------------------
-if s:is_cui && !g:is_windows
-  function! s:msg_left()
-    echo "Don't use Left-Key!!  Enter Normal-Mode and press 'h'!!!!"
-  endfunction
-  function! s:msg_down()
-    echo "Don't use Down-Key!!  Enter Normal-Mode and press 'j'!!!!"
-  endfunction
-  function! s:msg_up()
-    echo "Don't use Up-Key!!  Enter Normal-Mode and press 'k'!!!!"
-  endfunction
-  function! s:msg_right()
-    echo "Don't use Right-Key!!  Enter Normal-Mode and press 'l'!!!!"
-  endfunction
+let s:key_msgs = [
+      \ "Don't use Left-Key!!  Enter Normal-Mode and press 'h'!!!!",
+      \ "Don't use Down-Key!!  Enter Normal-Mode and press 'j'!!!!",
+      \ "Don't use Up-Key!!  Enter Normal-Mode and press 'k'!!!!",
+      \ "Don't use Right-Key!!  Enter Normal-Mode and press 'l'!!!!",
+      \ "Don't use Delete-Key!!  Press 'x' in Normal-Mode!!!!",
+      \ "Don't use Backspace-Key!!  Press 'x' in Normal-Mode!!!!"
+      \]
+function! s:echo_keymsg(msgnr)
+  echo s:key_msgs[a:msgnr]
+endfunction
 
+if s:is_cui && !g:is_windows
   " Disable move with cursor-key.
   noremap  <Left> <Nop>
   noremap! <Left> <Nop>
-  nnoremap <Left> :<C-u>call <SID>msg_left()<CR>
-  inoremap <Left> <Esc>:call <SID>msg_left()<CR>a
+  nnoremap <Left> :<C-u>call <SID>echo_keymsg(0)<CR>
+  inoremap <Left> <Esc>:call <SID>echo_keymsg(0)<CR>a
 
   noremap  <Down> <Nop>
   noremap! <Down> <Nop>
-  nnoremap <Down> :<C-u>call <SID>msg_down()<CR>
-  inoremap <Down> <Esc>:call <SID>msg_down()<CR>a
+  nnoremap <Down> :<C-u>call <SID>echo_keymsg(1)<CR>
+  inoremap <Down> <Esc>:call <SID>echo_keymsg(1)<CR>a
 
   noremap  <Up> <Nop>
   noremap! <Up> <Nop>
-  nnoremap <Up> :<C-u>call <SID>msg_up()<CR>
-  inoremap <Up> <Esc>:call <SID>msg_up()<CR>a
+  nnoremap <Up> :<C-u>call <SID>echo_keymsg(2)<CR>
+  inoremap <Up> <Esc>:call <SID>echo_keymsg(2)<CR>a
 
   noremap  <Right> <Nop>
   noremap! <Right> <Nop>
-  nnoremap <Right> :<C-u>call <SID>msg_right()<CR>
-  inoremap <Right> <Esc>:call <SID>msg_right()<CR>a
+  nnoremap <Right> :<C-u>call <SID>echo_keymsg(3)<CR>
+  inoremap <Right> <Esc>:call <SID>echo_keymsg(3)<CR>a
 else
   map  <Left>   <Plug>(movewin-left)
   map! <Left>   <Plug>(movewin-left)
@@ -1191,24 +1269,17 @@ else
   map! <Right>  <Plug>(movewin-right)
 endif
 
-
-function! s:msg_delete()
-  echo "Don't use Delete-Key!!  Press 'x' in Normal-Mode!!!!"
-endfunction
-function! s:msg_backspace()
-  echo "Don't use Backspace-Key!!  Press 'x' in Normal-Mode!!!!"
-endfunction
 " Disable delete with <Delete>
 noremap  <Del> <Nop>
 noremap! <Del> <Nop>
-nnoremap <Del> :<C-u>call <SID>msg_delete()<CR>
-inoremap <Del> <Esc>:call <SID>msg_delete()<CR>a
+nnoremap <Del> :<C-u>call <SID>echo_keymsg(4)<CR>
+inoremap <Del> <Esc>:call <SID>echo_keymsg(4)<CR>a
 " Disable delete with <BS>.
 " But available in command-line mode.
 noremap  <BS> <Nop>
 inoremap <BS> <Nop>
-nnoremap <BS> :<C-u>call <SID>msg_backspace()<CR>
-inoremap <BS> <Esc>:call <SID>msg_backspace()<CR>a
+nnoremap <BS> :<C-u>call <SID>echo_keymsg(5)<CR>
+inoremap <BS> <Esc>:call <SID>echo_keymsg(5)<CR>a
 " }}}
 
 
@@ -1216,7 +1287,6 @@ inoremap <BS> <Esc>:call <SID>msg_backspace()<CR>a
 " END of .vimrc {{{
 " ------------------------------------------------------------
 if s:is_cui
-  unlet g:is_windows g:is_cygwin g:is_mac g:is_unix g:at_startup
   colorscheme koturn
   filetype plugin indent on
 endif

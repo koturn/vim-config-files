@@ -6,7 +6,7 @@
 " /_/|_|\____/\__/\__,_/_/  /_/ /_/   \____/ ( )
 "                                            |/
 "
-" Setting file for GUI only.
+" The setting file for GUI only.
 " ============================================================
 " ------------------------------------------------------------
 " Load plugins only for GUI {{{
@@ -51,13 +51,7 @@ endif
 
 if g:is_windows
   set guifont=Consolas:h9 guifontwide=MS_Gothic:h9
-  " Setting for printing.
-  if has('printer')
-    set printoptions=number:y,header:0,syntax:y,left:5pt,right:5pt,top:10pt,bottom:10pt
-    set printfont=MS_Mincho:h12:cSHIFTJIS
-  endif
-
-  " Setting for menubar
+  """ Setting for menubar
   " set langmenu=ja_jp.utf-8
   " source $VIMRUNTIME/delmenu.vim
   " source $VIMRUNTIME/menu.vim
@@ -82,11 +76,13 @@ set mousehide
 if has('kaoriya')
   gui
   if g:is_windows
+    set transparency=215
     augroup MyAutoCmd
       au FocusGained,WinEnter * set transparency=215 titlestring&
       au FocusLost * set transparency=180 titlestring=Forcus\ was\ lost
     augroup END
   elseif g:is_mac
+    set transparency=15
     augroup MyAutoCmd
       au FocusGained,WinEnter * set transparency=15 titlestring&
       au FocusLost * set transparency=30 titlestring=Forcus\ was\ lost
@@ -94,7 +90,6 @@ if has('kaoriya')
   endif
 endif
 
-unlet g:is_windows g:is_cygwin g:is_mac g:is_unix g:at_startup
 colorscheme koturn
 filetype plugin indent on
 " }}}

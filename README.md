@@ -61,6 +61,12 @@ let g:gmail_address = 'xxxx.yyyy.zzzz@gmail.com'
 " g:previm_open_cmdに設定される値
 " この変数を定義しなければ、g:previm_open_cmdには、.vimrcで空文字列が代入される。
 let g:browser_cmd = 'C:\path\to\browser\chrome.exe'
+
+" vim-ref(https://github.com/thinca/vim-ref)が使用する
+" Lynxの-pauthオプションに設定される値
+" ユーザ名とパスワードが必要なプロキシ設定をしている場合に必須
+" この変数を定義しない、もしくは空文字列の場合、Lynxの-pauthオプションは使用しない。
+let g:pauth = 'username:password'
 ~~~~
 
 また、~/.vim/.private.vimが存在しない場合、  
@@ -154,9 +160,13 @@ encoding             | enc
 execute              | exec
 filencoding          | fenc
 filetype             | ft
+relativenumber       | rnu
 runtimepath          | rtp
 setlocal             | setl
 setglobal            | setg
+shiftwidth           | sw
+softtabstop          | sts
+tabstop              | ts
 termencoding         | tenc
 autogroup内のautocmd | au(autocmd!は省略しない)
 autocmd中のhighlight | hi
