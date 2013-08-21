@@ -76,20 +76,32 @@ set mousehide
 if has('kaoriya')
   gui
   if g:is_windows
-    set transparency=215
-    augroup MyAutoCmd
-      au FocusGained,WinEnter * set transparency=215 titlestring&
-      au FocusLost * set transparency=180 titlestring=Forcus\ was\ lost
-    augroup END
-  elseif g:is_mac
-    set transparency=15
-    augroup MyAutoCmd
-      au FocusGained,WinEnter * set transparency=15 titlestring&
-      au FocusLost * set transparency=30 titlestring=Forcus\ was\ lost
-    augroup END
+    let s:transparencies = [215, 180]
+    function! s:toggle_transparency()
+      if s:transparencies == [255, 255]
+        let s:transparencies = [215, 180]
+      else
+        let s:transparencies = [255, 255]
+      endif
+      doautocmd FocusGained
+    endfunction
+  else
+    let s:transparencies = [15, 30]
+    function! s:toggle_transparency()
+      if s:transparencies == [0, 0]
+        let s:transparencies = [15, 30]
+      else
+        let s:transparencies = [0, 0]
+      endif
+      doautocmd FocusGained
+    endfunction
   endif
+  command! ToggleTransparency  call s:toggle_transparency()
+  augroup MyAutoCmd
+    autocmd FocusGained,WinEnter * let &transparency=s:transparencies[0]
+    autocmd FocusLost * let &transparency=s:transparencies[1]
+  augroup END
 endif
-
 colorscheme koturn
 filetype plugin indent on
 " }}}
