@@ -44,9 +44,7 @@ endif
 
 " Singleton (if !s:is_cui)
 if has('clientserver')
-  let s:running_vim_list = filter(
-        \ split(serverlist(), '\n'),
-        \ 'v:val !=? v:servername')
+  let s:running_vim_list = filter(split(serverlist(), '\n'), 'v:val !=? v:servername')
   if !empty(s:running_vim_list)
     if !argc()
       quitall!
@@ -78,7 +76,7 @@ if g:at_startup && has('kaoriya')
     endfor
     delcommand FullInstall
   endfunction
-  command! FullInstall  call s:full_plugin()
+  command! -bar FullInstall  call s:full_plugin()
 endif
 " }}}
 
@@ -103,7 +101,7 @@ if !isdirectory($NEOBUNDLE_DIR . '/neobundle.vim')
     call neobundle#rc()
     NeoBundleInstall
   endfunction
-  command! NeoBundleInit  call s:neobundle_init()
+  command! -bar NeoBundleInit  call s:neobundle_init()
   echomsg 'Please Install NeoBundle!'
   echomsg 'Do command :NeoBundleInit'
   finish
@@ -114,6 +112,7 @@ if g:at_startup
 endif
 call neobundle#rc()
 NeoBundleFetch 'Shougo/neobundle.vim'
+NeoBundle 'csv.vim'
 NeoBundle 'Shougo/vimproc', {
       \ 'build' : {
       \   'windows' : 'make -f make_mingw32.mak',
@@ -128,18 +127,29 @@ NeoBundleLazy 'Shougo/unite.vim', {
       \     'name' : 'Unite',
       \     'complete' : 'customlist,unite#complete_source'
       \},]}}
-NeoBundleLazy 'ujihisa/unite-colorscheme', {
-      \ 'autoload' : {'unite_sources' : 'colorscheme'}
-      \}
-NeoBundleLazy 'ujihisa/unite-font', {
-      \ 'autoload' : {'unite_sources' : 'font'}
-      \}
+let g:unite_enable_start_insert = 1
+NeoBundleLazy 'ujihisa/unite-colorscheme', {'autoload' : {'unite_sources' : 'colorscheme'}}
+NeoBundleLazy 'ujihisa/unite-font', {'autoload' : {'unite_sources' : 'font'}}
+NeoBundleLazy 'osyo-manga/unite-airline_themes', {'autoload' : {'unite_sources' : 'airline_themes'}}
+NeoBundleLazy 'osyo-manga/unite-highlight', {'autoload' : {'unite_sources' : 'highlight'}}
+NeoBundleLazy 'tsukkee/unite-tag', {'autoload' : {'unite_sources' : 'tag'}}
+NeoBundleLazy 'tacroe/unite-mark', {'autoload' : {'unite_sources' : 'mark'}}
+NeoBundleLazy 'yomi322/unite-tweetvim', {'autoload' : {'unite_sources' : 'tweetvim'}}
+" NeoBundleLazy 'choplin/unite-vim_hacks', {'autoload' : {'unite_sources' : 'vim_hacks'}}
 nnoremap [unite] <Nop>
 nmap ,u  [unite]
-noremap <silent> [unite]b  :<C-u>UniteWithBufferDir -buffer-name=files -start-insert file file/new<CR>
-noremap <silent> [unite]c  :<C-u>Unite -auto-preview colorscheme<CR>
-noremap <silent> [unite]f  :<C-u>Unite -auto-preview font<CR>
-noremap <silent> [unite]m  :<C-u>Unite -buffer-name=files -start-insert buffer file_rec/async:! file file_mru<CR>
+noremap <silent> [unite]a  :<C-u>Unite airline_themes -auto-preview -winheight=12<CR>
+noremap <silent> [unite]b  :<C-u>Unite buffer<CR>
+noremap <silent> [unite]c  :<C-u>Unite colorscheme -auto-preview<CR>
+noremap <silent> [unite]d  :<C-u>Unite directory<CR>
+noremap <silent> [unite]f  :<C-u>Unite buffer file_rec/async:! file file_mru<CR>
+noremap <silent> [unite]F  :<C-u>Unite font -auto-preview<CR>
+noremap <silent> [unite]h  :<C-u>Unite highlight<CR>
+noremap <silent> [unite]m  :<C-u>Unite mark -auto-preview<CR>
+" noremap <silent> [unite]m  :<C-u>Unite -buffer-name=files -start-insert buffer file_rec/async:! file file_mru<CR>
+noremap <silent> [unite]t  :<C-u>Unite tag<CR>
+noremap <silent> [unite]T  :<C-u>Unite tweetvim<CR>
+noremap [unite]u :<C-u>Unite
 
 if has('lua') && v:version >= 703 && has('patch825')
   NeoBundleLazy 'Shougo/neocomplete.vim', {
@@ -178,7 +188,7 @@ let g:indent_guides_start_level = 1
 let g:indent_guides_guide_size  = 1
 let g:indent_guides_auto_colors = 0
 augroup MyAutoCmd
-  au ColorScheme * hi IndentGuidesOdd  ctermbg=darkgreen guibg=#663366
+  au ColorScheme * hi IndentGuidesOdd  ctermbg=darkgreen guibg=#cc66cc
   au ColorScheme * hi IndentGuidesEven ctermbg=darkblue  guibg=#6666ff
 augroup END
 
@@ -188,9 +198,64 @@ NeoBundleLazy 'osyo-manga/vim-reanimate', {
 let g:reanimate_save_dir = $DOTVIM . '/save'
 let g:reanimate_default_save_name = 'reanimate'
 let g:reanimate_sessionoptions = 'curdir,folds,help,localoptions,slash,tabpages,winsize'
+
+NeoBundleLazy 'jceb/vim-hier', {
+      \ 'autoload' : {'commands' : 'HierStart'}
+      \}
+
 NeoBundle 'hrp/EnhancedCommentify'
 
-" NeoBundle 'kana/vim-smartinput'
+" Clone of 'tpope/vim-endwise'.
+" NeoBundleLazy 'rhysd/endwize.vim', {
+"       \ 'autoload' : {
+"       \   'filetypes' : ['lua', 'ruby', 'sh', 'zsh', 'vb', 'vbnet', 'aspvbs', 'vim'],
+"       \}}
+" let g:endwize_add_info_filetypes = ['ruby', 'c', 'cpp']
+" imap <silent><CR> <CR><Plug>DiscretionaryEnd
+NeoBundleLazy 'kana/vim-smartinput', {
+      \ 'autoload' : {'insert' : 1}
+      \}
+let s:bundle = neobundle#get('vim-smartinput')
+function! s:bundle.hooks.on_source(bundle)
+  call smartinput#define_rule({
+        \ 'at'       : '\%(\<struct\>\|\<class\>\|\<enum\>\)\s*\w\+.*\%#',
+        \ 'char'     : '{',
+        \ 'input'    : '{};<Left><Left>',
+        \ 'filetype' : ['cpp'],
+        \})
+  call smartinput#define_rule({
+        \ 'at'       : '^\s*\(class\|def\|if\|for\|while\|unless\|until\|switch\).*\%#',
+        \ 'char'     : '<CR>',
+        \ 'input'    : '<CR><CR>end<Up><Tab>',
+        \ 'filetype' : ['ruby'],
+        \})
+  call smartinput#define_rule({
+        \ 'at'       : '^\s*if.*\%#',
+        \ 'char'     : '<CR>',
+        \ 'input'    : '<CR><CR>endif<Up><Tab>',
+        \ 'filetype' : ['vim'],
+        \})
+  call smartinput#define_rule({
+        \ 'at'       : '^\s*for.*\%#',
+        \ 'char'     : '<CR>',
+        \ 'input'    : '<CR><CR>endfor<Up><Tab>',
+        \ 'filetype' : ['vim'],
+        \})
+  call smartinput#define_rule({
+        \ 'at'       : '^\s*while.*\%#',
+        \ 'char'     : '<CR>',
+        \ 'input'    : '<CR><CR>endwhile<Up><Tab>',
+        \ 'filetype' : ['vim'],
+        \})
+  call smartinput#define_rule({
+        \ 'at'       : '^\s*function.*\%#',
+        \ 'char'     : '<CR>',
+        \ 'input'    : '<CR><CR>endfunction<Up><Tab>',
+        \ 'filetype' : ['vim'],
+        \})
+endfunction
+unlet s:bundle
+
 
 """""" if executable('w3m')
 NeoBundleLazy 'yuratomo/w3m.vim', {
@@ -217,10 +282,10 @@ NeoBundleLazy 'osyo-manga/vim-anzu', {
       \]}}
 nmap n  <Plug>(anzu-n-with-echo)zz
 nmap N  <Plug>(anzu-N-with-echo)zz
-nmap *  <Plug>(anzu-star-with-echo)zz
-nmap #  <Plug>(anzu-sharp-with-echo)zz
-nnoremap g*  g*zz
-nnoremap g#  g#zz
+nmap *  <Plug>(anzu-star-with-echo)Nzz
+nmap #  <Plug>(anzu-sharp-with-echo)Nzz
+nnoremap g*  g*Nzz
+nnoremap g#  g#Nzz
 
 NeoBundleLazy 'daisuzu/rainbowcyclone.vim', {
       \ 'autoload' : {
@@ -262,55 +327,62 @@ vmap g<S-LeftMouse>  <Plug>(visualstar-g*)
 NeoBundleLazy 'thinca/vim-ref', {
       \ 'autoload' : {'commands' : 'Ref'}
       \}
-" A Setting for the site of webdict.
-let g:ref_source_webdict_sites = {
-      \ 'je' : {'url' : 'http://dictionary.infoseek.ne.jp/jeword/%s'},
-      \ 'ej' : {'url' : 'http://dictionary.infoseek.ne.jp/ejword/%s'},
-      \ 'dn' : {'url' : 'http://dic.nicovideo.jp/a/%s'},
-      \ 'wiki_en' : {'url' : 'http://en.wikipedia.org/wiki/%s'},
-      \ 'wiki' : {'url' : 'http://ja.wikipedia.org/wiki/%s'},}
 nnoremap <Leader>e   :<C-u>Ref webdict ej<Space>
 nnoremap <Leader>j   :<C-u>Ref webdict je<Space>
 nnoremap <Leader>dn  :<C-u>Ref webdict dn<Space>
 nnoremap <Leader>we  :<C-u>Ref webdict wiki_en<Space>
 nnoremap <Leader>wj  :<C-u>Ref webdict wiki<Space>
 
-autocmd MyAutoCmd Filetype ref-webdict setl number
-if g:is_cygwin
-  autocmd MyAutoCmd Filetype ref-webdict setl enc=cp932
-endif
-let g:ref_open = 'split'
-" If you don't specify a following setting, webdict-results are garbled.
-let s:pauth = get(g:, 'pauth', '')
-if s:pauth ==# ''
-  let g:ref_source_webdict_cmd = 'lynx -dump -nonumbers %s'
-else
-  let g:ref_source_webdict_cmd = 'lynx -dump -nonumbers -pauth=' . s:pauth . ' %s'
-endif
-unlet s:pauth
-" Default webdict site
-let g:ref_source_webdict_sites.default = 'ej'
-" Filters for output. Remove the first few lines.
-function! g:ref_source_webdict_sites.je.filter(output)
-  let l:idx = strridx(a:output, '   (C) SHOGAKUKAN')
-  return join(split(a:output[: l:idx - 1], "\n")[15 :], "\n")
+let s:bundle = neobundle#get('vim-ref')
+function! s:bundle.hooks.on_source(bundle)
+  " A Setting for the site of webdict.
+  let g:ref_source_webdict_sites = {
+        \ 'je' : {'url' : 'http://dictionary.infoseek.ne.jp/jeword/%s'},
+        \ 'ej' : {'url' : 'http://dictionary.infoseek.ne.jp/ejword/%s'},
+        \ 'dn' : {'url' : 'http://dic.nicovideo.jp/a/%s'},
+        \ 'wiki_en' : {'url' : 'http://en.wikipedia.org/wiki/%s'},
+        \ 'wiki' : {'url' : 'http://ja.wikipedia.org/wiki/%s'}
+        \}
+  autocmd MyAutoCmd Filetype ref-webdict setl number
+  if g:is_cygwin
+    autocmd MyAutoCmd Filetype ref-webdict setl enc=cp932
+  endif
+  let g:ref_open = 'split'
+
+  " If you don't specify a following setting, webdict-results are garbled.
+  let s:pauth = get(g:, 'pauth', '')
+  if s:pauth ==# ''
+    let g:ref_source_webdict_cmd = 'lynx -dump -nonumbers %s'
+  else
+    let g:ref_source_webdict_cmd = 'lynx -dump -nonumbers -pauth=' . s:pauth . ' %s'
+  endif
+  unlet s:pauth
+
+  " Default webdict site
+  let g:ref_source_webdict_sites.default = 'ej'
+  " Filters for output. Remove the first few lines.
+  function! g:ref_source_webdict_sites.je.filter(output)
+    let l:idx = strridx(a:output, '   (C) SHOGAKUKAN')
+    return join(split(a:output[: l:idx - 1], "\n")[15 :], "\n")
+  endfunction
+  function! g:ref_source_webdict_sites.ej.filter(output)
+    let l:idx = strridx(a:output, '   (C) SHOGAKUKAN')
+    return join(split(a:output[: l:idx - 1], "\n")[15 :], "\n")
+  endfunction
+  function! g:ref_source_webdict_sites.dn.filter(output)
+    let l:idx = strridx(a:output, "\n   [l_box_b]\n")
+    return join(split(a:output[: l:idx], "\n")[16 :], "\n")
+  endfunction
+  function! g:ref_source_webdict_sites.wiki.filter(output)
+    let l:idx = strridx(a:output, "\n案内メニュー\n")
+    return join(split(a:output[: l:idx], "\n")[17 :], "\n")
+  endfunction
+  function! g:ref_source_webdict_sites.wiki_en.filter(output)
+    let l:idx = strridx(a:output, "\nNavigation menu\n")
+    return join(split(a:output[: l:idx], "\n")[17 :], "\n")
+  endfunction
 endfunction
-function! g:ref_source_webdict_sites.ej.filter(output)
-  let l:idx = strridx(a:output, '   (C) SHOGAKUKAN')
-  return join(split(a:output[: l:idx - 1], "\n")[15 :], "\n")
-endfunction
-function! g:ref_source_webdict_sites.dn.filter(output)
-  let l:idx = strridx(a:output, "\n   [l_box_b]\n")
-  return join(split(a:output[: l:idx], "\n")[16 :], "\n")
-endfunction
-function! g:ref_source_webdict_sites.wiki.filter(output)
-  let l:idx = strridx(a:output, "\n案内メニュー\n")
-  return join(split(a:output[: l:idx], "\n")[17 :], "\n")
-endfunction
-function! g:ref_source_webdict_sites.wiki_en.filter(output)
-  let l:idx = strridx(a:output, "\nNavigation menu\n")
-  return join(split(a:output[: l:idx], "\n")[17 :], "\n")
-endfunction
+unlet s:bundle
 """""" endif
 
 NeoBundleLazy 'rhysd/tmpwin.vim', {
@@ -365,30 +437,37 @@ NeoBundleLazy 'scrooloose/nerdtree', {
 NeoBundleLazy 'Shougo/vimshell', {
       \ 'autoload' : {'commands' : ['VimShell', 'VimShellPop', 'VimShellInteractive']}
       \}
-let g:my_vimshell_prompt_counter = -1
-function! g:my_vimshell_dynamic_prompt()
-  let g:my_vimshell_prompt_counter += 1
-  let anim = [
-        \ "(´:_:`)",
-        \ "( ´:_:)",
-        \ "(  ´:_)",
-        \ "(   ´:)",
-        \ "(    ´)",
-        \ "(     )",
-        \ "(     )",
-        \ "(`    )",
-        \ "(:`   )",
-        \ "(_:`  )",
-        \ "(:_:` )",
-        \]
-  return anim[g:my_vimshell_prompt_counter % len(anim)]
+let s:bundle = neobundle#get('vimshell')
+function! s:bundle.hooks.on_source(bundle)
+  let g:my_vimshell_prompt_counter = -1
+  function! g:my_vimshell_dynamic_prompt()
+    let g:my_vimshell_prompt_counter += 1
+    let anim = [
+          \ "(´:_:`)",
+          \ "( ´:_:)",
+          \ "(  ´:_)",
+          \ "(   ´:)",
+          \ "(    ´)",
+          \ "(     )",
+          \ "(     )",
+          \ "(`    )",
+          \ "(:`   )",
+          \ "(_:`  )",
+          \ "(:_:` )",
+          \]
+    return anim[g:my_vimshell_prompt_counter % len(anim)]
+  endfunction
+  if s:is_cui
+    let g:vimshell_prompt = "('v ')$ "
+  else
+    let g:vimshell_prompt_expr = 'g:my_vimshell_dynamic_prompt() . " $ "'
+    let g:vimshell_prompt_pattern = '^([ ´:_:`]\{5}) \$ '
+  endif
+  let g:vimshell_secondary_prompt = '> '
+  let g:vimshell_user_prompt = 'getcwd()'
+  let g:vimshell_right_prompt = '"[" . strftime("%Y/%m/%d %H:%M:%S", localtime()) . "]"'
 endfunction
-" let g:vimshell_prompt = "('v ')$ "
-let g:vimshell_prompt_expr = 'g:my_vimshell_dynamic_prompt() . " $ "'
-let g:vimshell_prompt_pattern = '^([ ´:_:`]\{5}) \$ '
-let g:vimshell_secondary_prompt = '> '
-let g:vimshell_user_prompt = 'getcwd()'
-let g:vimshell_right_prompt = '"[" . strftime("%Y/%m/%d %H:%M:%S", localtime()) . "]"'
+unlet s:bundle
 
 " When you start-up vim with no command-line argument,
 " execute VimShell.
@@ -427,22 +506,18 @@ NeoBundleLazy 'mitechie/pyflakes-pathogen', {
       \ 'autoload' : {'filetypes' : 'python'}
       \}
 
-" Clone of 'tpope/vim-endwise'.
-NeoBundleLazy 'rhysd/endwize.vim', {
-      \ 'autoload' : {
-      \   'filetypes' : ['lua', 'ruby', 'sh', 'zsh', 'vb', 'vbnet', 'aspvbs', 'vim'],
-      \}}
-let g:endwize_add_info_filetypes = ['ruby', 'c', 'cpp']
-" imap <silent><CR> <CR><Plug>DiscretionaryEnd
-
 NeoBundleLazy 'ruby-matchit', {
       \ 'autoload' : {'filetypes' : 'ruby'}
+      \}
+
+NeoBundleLazy 'mattn/emmet-vim', {
+      \ 'autoload' : {'filetypes' : 'html'}
       \}
 
 """""" if executable('ctags')
 NeoBundleLazy 'tagexplorer.vim', {
       \ 'autoload' : {
-      \   'filetypes' : ['cpp', 'java', 'perl', 'python', 'ruby']
+      \   'filetypes' : ['cpp', 'java', 'perl', 'python', 'ruby', 'tags']
       \}}
 """""" endif
 
@@ -451,63 +526,66 @@ NeoBundleLazy 'rbtnn/vimconsole.vim', {
       \}
 
 NeoBundleLazy 'thinca/vim-quickrun', {
-      \ 'autoload' : {
-      \   'filetypes' : ['c', 'cpp', 'cs', 'java', 'python', 'perl', 'ruby', 'r'],
-      \   'commands'  : 'QuickRun'
-      \}}
-let g:quickrun_config = {
-      \ '_' : {
-      \   'outputter/buffer/split' : ':botright',
-      \   'outputter/buffer/close_on_empty' : 1,
-      \   'runner' : 'vimproc',
-      \   'runner/vimproc/updatetime' : 60
-      \ },
-      \ 'c'      : {'type' : 'my_c'},
-      \ 'cpp'    : {'type' : 'my_cpp'},
-      \ 'cs'     : {'type' : 'my_cs'},
-      \ 'java'   : {'type' : 'my_java'},
-      \ 'lisp'   : {'type' : 'my_lisp'},
-      \ 'python' : {'type' : 'my_python'},
-      \ 'ruby'   : {'type' : 'my_ruby'},
-      \ 'r'      : {'type' : 'my_r'},
-      \ 'tex'    : {'type' : 'my_tex'},
-      \ 'kuin' : {
-      \   'command' : 'Kuin.exe',
-      \   'cmdopt'  : '-nw',
-      \   'exec'    : '%C %S %o',
-      \ },
-      \ 'my_c' : {
-      \   'command' : 'gcc',
-      \   'cmdopt'  : '-Wall -Wextra -fsyntax-only',
-      \   'exec'    : '%C %o %S',
-      \ }, 'my_cpp' : {
-      \   'command' : 'g++',
-      \   'cmdopt'  : '-Wall -Wextra -fsyntax-only',
-      \   'exec'    : '%C %o %S',
-      \ }, 'my_cs' : {
-      \   'command' : 'csc',
-      \   'cmdopt'  : '/out:csOut.exe',
-      \   'exec'    : '%C %o %S',
-      \ }, 'my_java' : {
-      \   'command' : 'javac',
-      \   'exec'    : '%C %S',
-      \ }, 'my_lisp' : {
-      \   'command' : 'clisp',
-      \   'exec'    : '%C %S',
-      \ }, 'my_python' : {
-      \   'command' : 'python',
-      \   'exec'    : '%C %S',
-      \ }, 'my_ruby' : {
-      \   'command' : 'ruby',
-      \   'exec'    : '%C %S',
-      \ }, 'my_r' : {
-      \   'command' : 'Rscript',
-      \   'exec'    : '%C %S',
-      \ }, 'my_tex' : {
-      \   'command' : 'pdflatex',
-      \   'exec'    : '%C %S',
-      \}}
-nnoremap <Leader>r  :<C-u>QuickRun -exec '%C %S'<CR>
+      \ 'autoload' : { 'commands'  : 'QuickRun' }
+      \}
+let s:bundle = neobundle#get('vim-quickrun')
+function! s:bundle.hooks.on_source(bundle)
+  let g:quickrun_config = {
+        \ '_' : {
+        \   'outputter' : 'quickfix',
+        \   'outputter/buffer/split' : ':botright',
+        \   'outputter/buffer/close_on_empty' : 1,
+        \   'runner' : 'vimproc',
+        \   'runner/vimproc/updatetime' : 60
+        \ },
+        \ 'c'      : {'type' : 'my_c'},
+        \ 'cpp'    : {'type' : 'my_cpp'},
+        \ 'cs'     : {'type' : 'my_cs'},
+        \ 'java'   : {'type' : 'my_java'},
+        \ 'lisp'   : {'type' : 'my_lisp'},
+        \ 'python' : {'type' : 'my_python'},
+        \ 'ruby'   : {'type' : 'my_ruby'},
+        \ 'r'      : {'type' : 'my_r'},
+        \ 'tex'    : {'type' : 'my_tex'},
+        \ 'kuin' : {
+        \   'command' : 'Kuin.exe',
+        \   'cmdopt'  : '-nw',
+        \   'exec'    : '%C %S %o',
+        \ },
+        \ 'my_c' : {
+        \   'command' : 'gcc',
+        \   'cmdopt'  : '-Wall -Wextra -fsyntax-only',
+        \   'exec'    : '%C %o %S',
+        \ }, 'my_cpp' : {
+        \   'command' : 'g++',
+        \   'cmdopt'  : '-Wall -Wextra -fsyntax-only',
+        \   'exec'    : '%C %o %S',
+        \ }, 'my_cs' : {
+        \   'command' : 'csc',
+        \   'cmdopt'  : '/out:csOut.exe',
+        \   'exec'    : '%C %o %S',
+        \ }, 'my_java' : {
+        \   'command' : 'javac',
+        \   'exec'    : '%C %S',
+        \ }, 'my_lisp' : {
+        \   'command' : 'clisp',
+        \   'exec'    : '%C %S',
+        \ }, 'my_python' : {
+        \   'command' : 'python',
+        \   'exec'    : '%C %S',
+        \ }, 'my_ruby' : {
+        \   'command' : 'ruby',
+        \   'exec'    : '%C %S',
+        \ }, 'my_r' : {
+        \   'command' : 'Rscript',
+        \   'exec'    : '%C %S',
+        \ }, 'my_tex' : {
+        \   'command' : 'pdflatex',
+        \   'exec'    : '%C %S',
+        \}}
+  nnoremap <Leader>r  :<C-u>QuickRun -exec '%C %S'<CR>
+endfunction
+unlet s:bundle
 
 NeoBundleLazy 'lambdalisue/platex.vim', {
       \ 'autoload' : {'filetypes' : 'tex'}
@@ -527,8 +605,28 @@ let g:pymode_folding = 0
 NeoBundleLazy 'kannokanno/previm', {
       \ 'autoload' : {'filetypes' : 'markdown'}
       \}
-" g:chrome_cmd is defined in ~/.vim/private.vim
+" g:chrome_cmd is defined in ~/.vim/.private.vim
 let g:previm_open_cmd = get(g:, 'browser_cmd', '')
+
+NeoBundleLazy 'joker1007/vim-markdown-quote-syntax', {
+      \ 'autoload' : {'filetypes' : 'markdown'}
+      \}
+let s:bundle = neobundle#get('vim-markdown-quote-syntax')
+function! s:bundle.hooks.on_source(bundle)
+  let g:markdown_quote_syntax_filetypes = {
+        \ 'c'          : {'start' : 'c'},
+        \ 'cpp'        : {'start' : 'cpp'},
+        \ 'html'       : {'start' : 'html'},
+        \ 'java'       : {'start' : 'java'},
+        \ 'javascript' : {'start' : 'javascript'},
+        \ 'perl'       : {'start' : 'perl'},
+        \ 'python'     : {'start' : 'python'},
+        \ 'ruby'       : {'start' : 'ruby'},
+        \ 'vim'        : {'start' : 'VimL'}
+        \}
+endfunction
+unlet s:bundle
+
 
 " When oppening a file, if the file has a particular extension,
 " open the file in binary-mode.
@@ -545,7 +643,7 @@ augroup MyAutoCmd
           \}}
     au Filetype binary Vinarise
   else  """""" elseif executable('xxd')
-    command! Binarise  setfiletype binary | edit
+    command! -bar Binarise  setfiletype binary | edit
     au Filetype binary let &bin = 1
     au BufReadPost * if &bin | %!xxd -g 1
     au BufReadPost * setfiletype xxd | endif
@@ -556,61 +654,32 @@ augroup MyAutoCmd
   endif
 augroup END
 
-
-NeoBundleLazy 'itchyny/thumbnail.vim', {
-      \ 'autoload' : {'commands' : 'Thumbnail'}
-      \}
-
-NeoBundleLazy 'thinca/vim-painter', {
-      \ 'autoload' : {'commands' : 'PainterStart'}
-      \}
-
-NeoBundle 'mattn/libcallex-vim'
-NeoBundleLazy 'mattn/eject-vim', {
-      \ 'autoload' : {'commands' : 'Eject'}
-      \}
-
 NeoBundleLazy 'mattn/benchvimrc-vim', {
       \ 'autoload' : {'commands' : 'BenchVimrc'}
-      \}
-
-NeoBundleLazy 'matrix.vim', {
-      \ 'type' : 'nosync',
-      \ 'base' : $DOTVIM . '/norepository-plugins',
-      \ 'autoload' : {'commands' : 'Matrix'}
-      \}
-
-NeoBundleLazy 'ScreenShot.vim', {
-      \ 'type' : 'nosync',
-      \ 'base' : $DOTVIM . '/norepository-plugins',
-      \ 'autoload' : {'commands' : ['ScreenShot', 'Text2Html', 'Diff2Html']}
       \}
 
 NeoBundleLazy 'thinca/vim-scouter', {
       \ 'autoload' : {'commands' : 'Scouter'}
       \}
+NeoBundleLazy 'tyru/open-browser.vim', {
+      \ 'autoload' : {
+      \   'commands' : ['OpenBrowser', 'OpenBrowserSearch'],
+      \   'mappings' : '<Plug>(openbrowser-smart-search)'
+      \}}
+nmap <Space>o  <Plug>(openbrowser-smart-search)
 
-NeoBundleLazy 'sudoku_game.vim', {
-      \ 'type' : 'nosync',
-      \ 'base' : $DOTVIM . '/norepository-plugins',
-      \ 'autoload' : {'commands' : ['SudokuEasy', 'SudokuMedium', 'SudokuHard', 'SudokuVeryHard']}
-      \}
-
-NeoBundleLazy 'mfumi/viminesweeper', {
-      \ 'autoload' : {'commands' : 'MineSweeper'}
-      \}
-
-" gmail.vim:
 NeoBundleLazy 'yuratomo/gmail.vim', {
       \ 'autoload' : {'commands' : 'Gmail'}
       \}
-" g:gmail_address is defined in ~/.vim/private.vim
+" g:gmail_address is defined in ~/.vim/.private.vim
 let g:gmail_user_name = get(g:, 'gmail_address', '')
 
 NeoBundleLazy 'basyura/TweetVim', {
       \ 'depends' : ['tyru/open-browser.vim', 'basyura/twibill.vim'],
-      \ 'autoload' : {'commands' : ['TweetVimHomeTimeline', 'TweetVimUserTimeline', 'TweetVimCommandSay', 'TweetVimUserStream']}
-      \}
+      \ 'autoload' : {
+      \   'commands' : ['TweetVimHomeTimeline', 'TweetVimUserTimeline', 'TweetVimCommandSay', 'TweetVimUserStream'],
+      \   'unite_sources' : 'tweetvim'
+      \}}
 noremap <Leader>t  :<C-u>TweetVimCommandSay<Space>
 " Number of tweet to show on editor.
 let g:tweetvim_tweet_per_page = 50
@@ -627,8 +696,24 @@ NeoBundleLazy 'daisuzu/facebook.vim', {
       \ 'depends' : ['tyru/open-browser.vim', 'mattn/webapi-vim'],
       \ 'autoload' : {'commands' : ['FacebookHome', 'FacebookAuthenticate']}
       \}
+
+NeoBundleLazy 'tsukkee/lingr-vim', {
+      \ 'autoload' : {'commands' : 'LingrLaunch'}
+      \}
+
+NeoBundleLazy 'LeafCage/vimhelpgenerator', {
+      \ 'autoload' : {'commands' : 'VimHelpGenerator'}
+      \}
+let g:vimhelpgenerator_defaultlanguage = 'en'
+let g:vimhelpgenerator_version = ''
+let g:vimhelpgenerator_author = 'Author  : koturn 0;'
+let g:vimhelpgenerator_contents = {
+      \ 'contents': 1, 'introduction': 1, 'usage': 1, 'interface': 1,
+      \ 'variables': 1, 'commands': 1, 'key-mappings': 1, 'functions': 1,
+      \ 'setting': 0, 'todo': 1, 'changelog': 0
+      \}
 " }}}
-" ************** The end of etting of NeoBundle **************
+" ************** The end of setting of NeoBundle **************
 
 " ------------------------------------------------------------
 " Basic settings {{{
@@ -638,7 +723,21 @@ set shortmess+=I
 " Enable to use '/' for direstory path separator on Windows.
 set shellslash
 " Work with clipboard.
-set clipboard=unnamed,autoselect
+if has('clipboard')
+  if has('unnamedplus')
+    set clipboard=unnamedplus,autoselect
+    nnoremap <silent> <Space>,  :<C-u>let @+ = @0<CR>
+    nnoremap <silent> ,<Space>  :<C-u>let @0 = @+<CR>
+    cnoremap <M-P>  <C-r>+
+    vnoremap <M-P>  "+p
+  else
+    set clipboard=unnamed,autoselect
+    nnoremap <silent> <Space>,  :<C-u>let @* = @0<CR>
+    nnoremap <silent> ,<Space>  :<C-u>let @0 = @*<CR>
+    cnoremap <M-P>  <C-r>*
+    vnoremap <M-P>  "*p
+  endif
+endif
 " Enable square-selecting if charactors don't exist.
 set virtualedit=block
 " Turn off word wrap.
@@ -685,7 +784,7 @@ set number
 " Setting for printing.
 if has('printer') && g:is_windows
   set printoptions=number:y,header:0,syntax:y,left:5pt,right:5pt,top:10pt,bottom:10pt
-  set printfont=Consolas:h9 printmbfont=r:MS_Gothic:h10,a:yes
+  set printfont=Consolas:h8 printmbfont=r:MS_Gothic:h8,a:yes
 endif
 
 
@@ -755,14 +854,15 @@ if g:is_cygwin
   set enc =utf-8
   set fenc=utf-8
   set tenc=utf-8
-  if &term ==# 'xterm'  " In mintty
+  if &term =~# '^xterm' && &t_Co < 256
+    set t_Co=256  " Extend cygwin terminal color
+  endif
+  if &term !=# 'cygwin'  " not in command prompt
     " Change cursor shape depending on mode.
     let &t_ti .= "\e[1 q"
     let &t_SI .= "\e[5 q"
     let &t_EI .= "\e[1 q"
     let &t_te .= "\e[0 q"
-    set tenc=utf-8
-  """""" elseif &term ==# 'cygwin'  " In command-prompt
   endif
 endif
 
@@ -803,15 +903,14 @@ function! s:try_repeat(cmd)
 endfunction
 
 function! s:toggle_tab_space(width)
-  let l:i = 0
   let l:spaces = ''
-  while l:i < a:width
+  for l:i in range(1, a:width)
     let l:spaces .= ' '
-    let l:i += 1
-  endwhile
+  endfor
 
-  let &sw = a:width
-  let &ts = a:width
+  let &sw  = a:width
+  let &ts  = a:width
+  let &sts = a:width
   let l:cursor = getpos('.')
   if &expandtab
     set noexpandtab
@@ -825,10 +924,7 @@ function! s:toggle_tab_space(width)
   call setpos('.', l:cursor)
 endfunction
 nnoremap <silent> <Leader><Tab>  :<C-u>call <SID>toggle_tab_space(&ts)<CR>
-command! -nargs=1 Indent
-      \   let &sw  = <q-args>
-      \ | let &ts  = <q-args>
-      \ | let &sts = <q-args>
+command! -bar -nargs=1 Indent  let &sw = <q-args> | let &ts = <q-args> | let &sts = <q-args>
 
 " Make directory automatically.
 function! s:auto_mkdir(dir, force)
@@ -860,7 +956,7 @@ function! s:cmd_which(cmd)
 
   let &suffixesadd = l:sfx
 endfunction
-command! -nargs=1 Which  call s:cmd_which(<q-args>)
+command! -bar -nargs=1 Which  call s:cmd_which(<q-args>)
 
 
 " lcd to buffer-directory.
@@ -870,12 +966,11 @@ function! s:cmd_lcd(count)
     exec 'lcd' fnameescape(l:dir)
   endif
 endfunction
-command! -nargs=0 -count=0 Lcd  call s:cmd_lcd(<count>)
+command! -bar -nargs=0 -count=0 Lcd  call s:cmd_lcd(<count>)
 
 
 " Close buffer not closing window
-command! Ebd  call EBufdelete()
-function! EBufdelete()
+function! s:buf_delete()
   let l:current_bufnr   = bufnr("%")
   let l:alternate_bufnr = bufnr("#")
   if buflisted(l:alternate_bufnr)
@@ -891,6 +986,7 @@ function! EBufdelete()
     endif
   endif
 endfunction
+command! -bar Ebd  call s:buf_delete()
 
 
 " Preview fold area.
@@ -934,32 +1030,66 @@ if executable('chmod')
 endif
 
 
-" Execute selected text as a vimscript
-function! s:exec_selected_text()
+function! s:get_selected_text()
   let l:tmp = @@
   silent normal gvy
-  let l:selected = @@
+  let l:text = @@
   let @@ = l:tmp
-  for l:elm in split(l:selected, "\n")
+  return l:text
+endfunction
+
+" Execute selected text as a vimscript
+function! s:exec_selected_text()
+  for l:elm in split(s:get_selected_text(), "\n")
     exec l:elm
   endfor
 endfunction
 xnoremap <silent> <Leader>e  :<C-u>call <SID>exec_selected_text()<CR>
 
-
-function! s:delte_trailing_whitespace()
-  let l:cursor = getpos('.')
-  silent! %s/\s\+$//g
-  call setpos('.', l:cursor)
+" Replace command for selected text.
+" @*: clipboard  @@: anonymous buffer
+function! s:store_selected_text()
+  let l:selected = substitute(s:get_selected_text(), '\([\.\^\$\~\*\+\/\\]\)', '\\\1', 'g')
+  silent! let @* = l:selected
+  silent! let @0 = l:selected
 endfunction
-command! DeleteTrailingWhitespace  call s:delte_trailing_whitespace()
-command! DeleteBlankLines  :g /^$/d
-command! -nargs=1 -complete=file Rename  file <args> | call delete(expand('#'))
-command! -nargs=1 -complete=file E  tabedit <args>
-command! Q  tabclose <args>
+xnoremap ,r  :<C-u>call <SID>store_selected_text()<CR>:<C-u>%s/<C-r>"//gc<Left><Left><Left>
+xnoremap ,s  :<C-u>call <SID>store_selected_text()<CR>/<C-u><C-r>"<CR>N
 
-" Highlight cursor position verticaly and horizontaly.
-command! ToggleCursorHighlight
+
+function! s:vimdiff_in_newtab(...)
+  if a:0 == 1
+    tabedit %:p
+    exec 'rightbelow vertical diffsplit ' . a:1
+  else
+    exec 'tabedit ' . a:1
+    for l:file in a:000[1 :]
+      exec 'rightbelow vertical diffsplit ' . l:file
+    endfor
+  endif
+  wincmd w
+endfunction
+command! -bar -nargs=+ -complete=file Diff  call s:vimdiff_in_newtab(<f-args>)
+
+function! s:compare(...)
+  if a:0 == 1
+    tabedit %:p
+    exec 'rightbelow vnew ' . a:1
+  else
+    exec 'tabedit ' . a:1
+    setl scrollbind
+    for l:file in a:000[1 :]
+      exec 'rightbelow vnew ' . l:file
+      setl scrollbind
+    endfor
+  endif
+  wincmd w
+endfunction
+command! -bar -nargs=+ -complete=file Compare  call s:compare(<f-args>)
+
+
+" Highlight cursor position vertically and horizontally.
+command! -bar ToggleCursorHighlight
       \   if !&cursorline || !&cursorcolumn || &colorcolumn ==# ''
       \ |   setl   cursorline   cursorcolumn colorcolumn=80
       \ | else
@@ -968,7 +1098,34 @@ command! ToggleCursorHighlight
 nnoremap <silent> <Leader>h  :<C-u>ToggleCursorHighlight<CR>
 
 
-command! CloneToNewTab  exec 'tabnew ' . expand('%:p')
+function! s:delte_trailing_whitespace()
+  let l:cursor = getpos('.')
+  silent! %s/\s\+$//g
+  call setpos('.', l:cursor)
+endfunction
+command! -bar DeleteTrailingWhitespace  call s:delte_trailing_whitespace()
+command! -bar DeleteBlankLines  :g /^$/d
+
+" Reopen current file with another encoding.
+command! -bang -bar Utf8       edit<bang> ++enc=utf-8
+command! -bang -bar Iso2022jp  edit<bang> ++enc=iso-2022-jp
+command! -bang -bar Cp932      edit<bang> ++enc=cp932
+command! -bang -bar Euc        edit<bang> ++enc=euc-jp
+command! -bang -bar Utf16      edit<bang> ++enc=ucs-2le
+command! -bang -bar Utf16be    edit<bang> ++enc=ucs-2
+" File encoding commands.
+command! -bar FUtf8       setl fenc=utf-8
+command! -bar FIso2022jp  setl fenc=iso-2022-jp
+command! -bar FCp932      setl fenc=cp932
+command! -bar FEuc        setl fenc=euc-jp
+command! -bar FUtf16      setl fenc=ucs-2le
+command! -bar FUtf16be    setl fenc=ucs-2
+
+command! -bar -nargs=1 -complete=file Rename  file <args> | call delete(expand('#'))
+command! -bar CloneToNewTab  exec 'tabnew ' . expand('%:p')
+command! -bar -nargs=1 -complete=file E  tabedit <args>
+command! -bar Q  tabclose <args>
+command! -bar GC  call garbagecollect()
 " }}}
 
 
@@ -976,7 +1133,11 @@ command! CloneToNewTab  exec 'tabnew ' . expand('%:p')
 " Setting for Visualize {{{
 " ------------------------------------------------------------
 " Show invisible characters and define format of the characters.
-set list listchars=eol:$,tab:>-,extends:<
+if &enc ==# 'utf-8'
+  set list listchars=eol:↓,extends:»,nbsp:%,precedes:«,tab:»-,trail:-
+else
+  set list listchars=eol:$,extends:>,nbsp:%,precedes:<,tab:>-,trail:-
+endif
 augroup MyAutoCmd
   au ColorScheme * hi WhitespaceEOL term=underline ctermbg=Blue guibg=Blue
   au VimEnter,WinEnter * call matchadd('WhitespaceEOL', ' \+$')
@@ -1045,9 +1206,8 @@ augroup END
 " ------------------------------------------------------------
 " Show status line at the second line from the last line.
 set laststatus=2
-if g:is_cygwin
+if s:is_cui && &t_Co < 16
   set statusline=%<%f\ %m\ %r%h%w%{'[fenc='.(&fenc!=#''?&fenc:&enc).']\ [ff='.&ff.']\ [ft='.(&ft==#''?'null':&ft).']\ [ascii=0x'}%B]%=\ (%v,%l)/%L%8P
-
   " Change color of status line depending on mode.
   if has('syntax')
     augroup MyAutoCmd
@@ -1071,12 +1231,12 @@ if g:is_cygwin
     redir => l:hl
     exec 'highlight ' . a:hi
     redir END
-    let l:hl = substitute(l:hl, '[\r\n]', '', 'g')
-    let l:hl = substitute(l:hl, 'xxx', '', '')
+    let l:hl = substitute(substitute(l:hl, 'xxx', '', ''), '[\r\n]', '', 'g')
     return l:hl
   endfunction
 else
   NeoBundle 'bling/vim-airline'
+  let g:airline_theme = 'solarized'
 endif
 " }}}
 
@@ -1084,6 +1244,23 @@ endif
 " ------------------------------------------------------------
 " Keybinds {{{
 " ------------------------------------------------------------
+" For terminal
+if !g:is_windows && s:is_cui
+  " Use meta keys in console.
+  for s:ch in map(
+        \   range(char2nr('%'), char2nr('?'))
+        \ + range(char2nr('A'), char2nr('N'))
+        \ + range(char2nr('P'), char2nr('Z'))
+        \ + range(char2nr('a'), char2nr('z'))
+        \ , 'nr2char(v:val)')
+    " <ESC>O do not map because used by arrow keys.
+    exec 'map  <ESC>' . s:ch '<M-' . s:ch . '>'
+    exec 'cmap <ESC>' . s:ch '<M-' . s:ch . '>'
+  endfor
+  unlet s:ch
+  map  <NUL>  <C-Space>
+  map! <NUL>  <C-Space>
+endif
 if g:is_mac
   noremap  ¥  \
   noremap! ¥  \
@@ -1091,6 +1268,9 @@ if g:is_mac
   noremap! \  ¥
 endif
 
+" Start indert-mode at indented position.
+nnoremap <C-A>  aa<Esc>==xa
+nnoremap <C-I>  aa<Esc>==xa
 " Toggle search highlight
 nnoremap <silent> <Esc><Esc>    :<C-u>setl nohlsearch<CR>
 nnoremap <silent> <Space><Esc>  :<C-u>setl hlsearch! hlsearch?<CR>
@@ -1102,8 +1282,13 @@ nnoremap j   gj
 nnoremap k   gk
 nnoremap gj   j
 nnoremap gk   k
+" For vimgrep
+nnoremap [q  :<C-u>cprevious<CR>
+nnoremap ]q  :<C-u>cnext<CR>
+nnoremap [Q  :<C-u>cfirst<CR>
+nnoremap ]Q  :<C-u>clast<CR>
 " Paste at start of line.
-nnoremap <C-p>  <S-i><C-r>"<Esc>
+nnoremap <C-p>  I<C-r>"<Esc>
 " Toggle relativenumber.
 """""" if v:version >= 703
 nnoremap <silent> <Leader>l  :<C-u>setl rnu! rnu?<CR>
@@ -1116,15 +1301,19 @@ nnoremap <silent> <M-+>   <C-w>+
 nnoremap <silent> <M-->   <C-w>-
 nnoremap <silent> <M-=>   <C-w>-
 nnoremap <silent> <M->>   <C-w>>
-nnoremap <silent> <Esc><  <C-w><
-nnoremap <silent> <Esc>+  <C-w>+
-nnoremap <silent> <Esc>-  <C-w>-
-nnoremap <silent> <Esc>=  <C-w>-
-nnoremap <silent> <Esc>>  <C-w>>
 " Change tab.
 nnoremap <C-Tab>    gt
 nnoremap <S-C-Tab>  Gt
+" Tag jump
+nnoremap <C-]>  <C-]>zz
+nnoremap <Space>p  "*p
+" Show ascii-code of charactor under cursor.
+nnoremap <Space>@  :<C-u>ascii<CR>
 
+
+" Move to indented position.
+inoremap <C-A>  a<Esc>==xa
+inoremap <C-I>  a<Esc>==xa
 " Cursor-move setting at insert-mode.
 inoremap <C-h>  <Left>
 inoremap <C-j>  <Down>
@@ -1145,34 +1334,29 @@ if g:is_unix && s:is_cui
   inoremap <silent> <C-[>  <ESC>
 endif
 
+
 " Cursor-move setting at insert-mode.
-cnoremap <M-h>    <Left>
-cnoremap <M-j>    <Down>
-cnoremap <M-k>    <Up>
-cnoremap <M-l>    <Right>
-cnoremap <M-S-H>  <Home>
-cnoremap <M-S-L>  <End>
-cnoremap <M-w>    <S-Right>
-cnoremap <M-b>    <S-Left>
-cnoremap <M-x>    <Del>
-cnoremap <M-p>    <C-r><S-">
-" for terminal. (Enable <M-h> to move <Left>.)
-cnoremap <Esc>h   <Left>
-cnoremap <Esc>j   <Down>
-cnoremap <Esc>k   <Up>
-cnoremap <Esc>l   <Right>
-cnoremap <Esc>H   <Home>
-cnoremap <Esc>L   <End>
-cnoremap <Esc>w   <S-Right>
-cnoremap <Esc>b   <S-Left>
-cnoremap <Esc>x   <Del>
-cnoremap <Esc>p   <C-r><S-">
+cnoremap <M-h>  <Left>
+cnoremap <M-j>  <Down>
+cnoremap <M-k>  <Up>
+cnoremap <M-l>  <Right>
+cnoremap <M-H>  <Home>
+cnoremap <M-L>  <End>
+cnoremap <M-w>  <S-Right>
+cnoremap <M-b>  <S-Left>
+cnoremap <M-x>  <Del>
+" Paste from anonymous buffer
+cnoremap <M-p>  <C-r><S-">
 " Add excape to '/' and '?' automatically.
 cnoremap <expr> /  getcmdtype() == '/' ? '\/' : '/'
 cnoremap <expr> ?  getcmdtype() == '?' ? '\?' : '?'
+
+
 " Select paren easly
 onoremap )  f)
 onoremap (  t(
+
+
 xnoremap )  f)
 xnoremap (  t(
 " Reselect visual block after indent.
@@ -1181,11 +1365,10 @@ xnoremap >  >gv
 " Select current position to EOL.
 xnoremap v  $<Left>
 " Paste yanked string vertically.
-vnoremap <C-p>  I<C-r>"<ESC>
+xnoremap <C-p>  I<C-r>"<ESC>
 " Sequencial copy
 vnoremap <silent> <M-p>  "0p
-" replace selected words.
-vnoremap <C-r>  y:%s/<C-r>"/
+
 
 noremap  <silent> <F2>  :<C-u>NERDTree<CR>
 noremap! <silent> <F2>  <Esc>:NERDTree<CR>
@@ -1193,11 +1376,13 @@ noremap! <silent> <F2>  <Esc>:NERDTree<CR>
 noremap  <silent> <F3>  :<C-u>MiniBufExplore<CR>
 noremap! <silent> <F3>  <Esc>:MiniBufExplore<CR>
 
-noremap  <silent> <F4>  :<C-u>call tmpwin#toggle('VimShell')<CR>
-noremap! <silent> <F4>  <Esc>:call tmpwin#toggle('VimShell')<CR>
+noremap  <silent> <F4>  :<C-u>VimShell<CR>
+noremap! <silent> <F4>  <Esc>:VimShell<CR>
+" noremap  <silent> <F4>  :<C-u>call tmpwin#toggle('VimShell')<CR>
+" noremap! <silent> <F4>  <Esc>:call tmpwin#toggle('VimShell')<CR>
 
-noremap  <silent> <F5>  :<C-u>QuickRun<CR>
-noremap! <silent> <F5>  <Esc>:QuickRun<CR>
+noremap  <silent> <F5>  :<C-u>HierStart<CR>:<C-u>QuickRun<CR>
+noremap! <silent> <F5>  <Esc>:HierStart<CR>:<C-u>QuickRun<CR>
 
 noremap  <silent> <S-F5>  :<C-u>sp +enew<CR>:r !make<CR>
 noremap! <silent> <S-F5>  <Esc>:sp +enew<CR>:r !make<CR>
