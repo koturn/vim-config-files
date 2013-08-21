@@ -1,7 +1,7 @@
 ﻿vim-setting-files
 =================
 
-~~~~AA
+```AA
 +--------------------------------------------------+
 |      __         __                      ____     |
 |     / /______  / /___  ___________     / __ \ _  |
@@ -10,7 +10,7 @@
 |  /_/|_|\____/\__/\__,_/_/  /_/ /_/   \____/ ( )  |
 |                                             |/   |
 +--------------------------------------------------+
-~~~~
+```
 
 koturn 0;のvimの設定ファイルです。  
 ## 導入
@@ -50,7 +50,7 @@ $ git clone git://github.com/Shougo/neobundle.vim ~/.vim/bundle/neobundle.vim
 に配置してあります。  
 現在必要な設定項目は、以下の例の通りです。  
 
-~~~~VimL
+```VimL
 """ .private.vim """
 " gmail.vim(https://github.com/yuratomo/gmail.vim)の
 " g:gmail_user_nameに設定される値
@@ -67,7 +67,7 @@ let g:browser_cmd = 'C:\path\to\browser\chrome.exe'
 " ユーザ名とパスワードが必要なプロキシ設定をしている場合に必須
 " この変数を定義しない、もしくは空文字列の場合、Lynxの-pauthオプションは使用しない。
 let g:pauth = 'username:password'
-~~~~
+```
 
 また、~/.vim/.private.vimが存在しない場合、  
 g:gmail_address  
@@ -103,14 +103,14 @@ g:browser_cmd
 
 例:
 
-~~~~VimL
+```VimL
 command! ToggleCursorHighlight
       \   if !&cursorline || !&cursorcolumn
       \ |   setl   cursorline   cursorcolumn
       \ | else
       \ |   setl nocursorline nocursorcolumn
       \ | endif
-~~~~
+```
 
 
 #### 3. setとletとexecute
@@ -120,14 +120,14 @@ command! ToggleCursorHighlight
 
 例:
 
-~~~~VimL
+```VimL
 set columns=100
 let &lines = s:lines
 
 let s:posx = '10'
 let s:posy = '10'
 exec 'winpos ' . s:posx . ' ' . s:posy
-~~~~
+```
 letを用いる場合、代入演算子(=)の前後に1スペース以上空けること。
 
 
@@ -138,7 +138,7 @@ letを用いる場合、代入演算子(=)の前後に1スペース以上空け�
 
 例:
 
-~~~~VimL
+```VimL
 let s:a = 10
 let s:b = 20
 let s:c = s:a + s:b
@@ -147,7 +147,7 @@ let s:substr1 = s:str[5 : 15]
 let s:substr2 = s:str[s:a : s:b]
 " これはシンタックスエラー
 " let s:substr3 = s:str[s:a: s:b]
-~~~~
+```
 
 
 #### 5. オプションやコマンドの略称
@@ -179,7 +179,7 @@ autocmd中のhighlight | hi
 
 例:
 
-~~~~VimL
+```VimL
 function! s:get_winpos_strs()
   let l:wstr = ''
   redir => l:wstr
@@ -188,7 +188,7 @@ function! s:get_winpos_strs()
   let l:wstr = substitute(l:wstr, '[\r\n]', '', 'g')
   return l:wstr[17 :]
 endfunction
-~~~~
+```
 
 ###### 6-2. 滅多に必要のない条件判断
 環境判定などのif文で、判定する必要性があまりないものについては、
@@ -196,11 +196,11 @@ ifとendifをダブルクオート6つでコメントアウトする。
 
 例:
 
-~~~~VimL
+```VimL
 """""" if v:version >= 703
 nnoremap <silent> <Leader>l  :<C-u>setl relativenumber!<CR>
 """""" endif
-~~~~
+```
 
 ###### 6-3. リローダブル
 .vimrc, .gvimrcはリローダブルにすること。  
@@ -209,7 +209,7 @@ nnoremap <silent> <Leader>l  :<C-u>setl relativenumber!<CR>
 
 例:
 
-~~~~VimL
+```VimL
 augroup MyAutoCmd
   autocmd!
 augroup END
@@ -223,7 +223,7 @@ augroup MyAutoCmd
   au Colorscheme * hi JPSpace term=underline ctermbg=Red guibg=Red
   au VimEnter,WinEnter * call matchadd('JPSpace', '　')
 augroup END
-~~~~
+```
 
 また、いかなるタイミングで各種autocmdが発行されても影響が出ないようにすること。
 
@@ -238,17 +238,17 @@ augroup END
 
 悪い例:
 
-~~~~VimL
+```VimL
 autocmd MyAutoCmd BufWritePost *
       \   let l:file = expand('%:p')
       \ | if getline(1) =~# '^#!' && !executable(l:file)
       \ |   silent! call vimproc#system('chmod a+x ' . shellescape(l:file))
       \ | endif
-~~~~
+```
 
 良い例:
 
-~~~~VimL
+```VimL
 function! s:add_permission_x()
   let l:file = expand('%:p')
   if getline(1) =~# '^#!' && !executable(l:file)
@@ -256,7 +256,7 @@ function! s:add_permission_x()
   endif
 endfunction
 autocmd MyAutoCmd BufWritePost * call s:add_permission_x()
-~~~~
+```
 
 
 
