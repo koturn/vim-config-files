@@ -14,10 +14,8 @@
 NeoBundleLazy 'thinca/vim-fontzoom', {
       \ 'autoload' : {
       \   'commands' : 'Fontzoom',
-      \   'mappings' : [
-      \     ['n', '<Plug>(fontzoom-larger)'],
-      \     ['n', '<Plug>(fontzoom-smaller)']
-      \]}}
+      \   'mappings' : [['n', '<Plug>(fontzoom-']]
+      \}}
 nmap +  <Plug>(fontzoom-larger)
 nmap -  <Plug>(fontzoom-smaller)
 " }}}
@@ -28,7 +26,7 @@ nmap -  <Plug>(fontzoom-smaller)
 " Basic settings {{{
 " ------------------------------------------------------------
 set guioptions=    " Hide menubar and toolbar.
-set winaltkeys=no  " Turns of the Alt key bindings to the gui menu
+set winaltkeys=no  " Turns off the Alt key bindings to the gui menu
 set cursorline cursorcolumn
 
 function! BalloonExpr()

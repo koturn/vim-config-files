@@ -34,6 +34,10 @@ if has('gui_running')  " for GUI
   highlight StatusLine guifg=SlateBlue guibg=white
   highlight Statement  guifg=Gold                   gui=NONE
   highlight Type                                    gui=NONE
+  highlight Pmenu      guifg=White     guibg=SlateBlue
+  highlight PmenuSel   guibg=White     guifg=Black
+  highlight PmenuSbar  guibg=Black
+  highlight PmenuThumb guifg=DarkGray
   highlight LineNr     guifg=Green
 else  " for Console
   highlight Normal     ctermfg=LightGrey ctermbg=Black
@@ -46,6 +50,8 @@ else  " for Console
   highlight Statement  ctermfg=Yellow                  cterm=NONE
   highlight Type                                       cterm=NONE
   highlight LineNr     ctermfg=Green
-  highlight CursorColumn ctermbg=gray cterm=reverse
-  highlight CursorLine   ctermbg=gray cterm=reverse
+  highlight CursorColumn ctermfg=bg ctermbg=fg
+  highlight CursorLine   ctermfg=bg ctermbg=fg
+  " highlight CursorColumn ctermbg=gray cterm=reverse
+  " highlight CursorLine   ctermbg=gray cterm=reverse
 endif
