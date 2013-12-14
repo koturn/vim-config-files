@@ -100,6 +100,10 @@ if has('kaoriya')
     autocmd FocusLost * let &transparency=s:transparencies[1]
   augroup END
 endif
+
+if !g:at_startup
+  call neobundle#call_hook('on_source')
+endif
 colorscheme koturn
 filetype plugin indent on
 " }}}

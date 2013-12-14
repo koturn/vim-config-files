@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 
-<project name="Template" default="all" basedir=".">
+<project name="<+CURSOR+>Template" default="all" basedir=".">
   <property name="src.dir" value="src"/>
   <property name="bin.dir" value="bin"/>
   <property name="jar.name" value="Template.jar"/>

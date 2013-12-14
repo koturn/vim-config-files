@@ -2,18 +2,25 @@
 CC       = gcc
 CXX      = g++
 # MACROS   = -DNDEBUG
-# LDLIBS   = -lm
-CFLAGS   = -pipe -Wall -Wextra $(COPTFLAGS) $(if $(STD), $(addprefix -std=, $(STD)),) $(MACROS)
-CXXFLAGS = -pipe -O3 -Wall -Wextra $(if $(STD), $(addprefix -std=, $(STD)),) $(MACROS)
+# INCS     = -I./include
+CFLAGS   = -pipe $(C_WARNING_FLAGS)   $(COPTFLAGS)   $(INCS) $(if $(STD), $(addprefix -std=, $(STD)),) $(MACROS)
+CXXFLAGS = -pipe $(CXX_WARNING_FLAGS) $(CXXOPTFLAGS) $(INCS) $(if $(STD), $(addprefix -std=, $(STD)),) $(MACROS)
 LDFLAGS  = -pipe $(LDOPTFLAGS)
+# LDLIBS   = -lm
 TARGET   = template
 OBJS     = $(addsuffix .o, $(basename $(TARGET)))
 SRCS     = $(OBJS:%.o=%.c)
 
+C_WARNING_FLAGS = -Wall -Wextra -Wformat=2 -Wstrict-aliasing=2  \
+                  -Wcast-align -Wcast-qual -Wconversion         \
+                  -Wfloat-equal -Wpointer-arith -Wswitch-enum   \
+                  -Wwrite-strings -pedantic
+CXX_WARNING_FLAGS = $(C_WARNING_FLAGS) -Weffc++ -Woverloaded-virtual
 
 ifeq ($(OS),Windows_NT)
-    TARGET := $(addsuffix .exe, $(TARGET))
-    CFLAGS += -finput-charset=utf-8 -fexec-charset=cp932
+    TARGET   := $(addsuffix .exe, $(TARGET))
+    CFLAGS   += -finput-charset=utf-8 -fexec-charset=cp932
+    CXXFLAGS += -finput-charset=utf-8 -fexec-charset=cp932
 else
     TARGET := $(addsuffix .out, $(TARGET))
 endif
@@ -39,13 +46,17 @@ ifeq ($(DEBUG),true)
 endif
 
 ifeq ($(OMP),true)
-    CFLAGS  += -fopenmp
-    LDFLAGS += -fopenmp
+    COPTFLAGS    += -fopenmp
+    CXXOPTFLAGS  += -fopenmp
+    LDOPTFLAGS   += -fopenmp
 else
-    CFLAGS  += -Wno-unknown-pragmas
+    COPTFLAGS    += -Wno-unknown-pragmas
+    CXXOPTFLAGS  += -Wno-unknown-pragmas
 endif
 
 %.exe :
+	$(CC) $(LDFLAGS) $(filter %.c %.o, $^) $(LDLIBS) -o $@
+%.out :
 	$(CC) $(LDFLAGS) $(filter %.c %.o, $^) $(LDLIBS) -o $@
 
 

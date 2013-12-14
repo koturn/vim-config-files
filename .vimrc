@@ -25,7 +25,7 @@ if !exists($MYGVIMRC)
   let $MYGVIMRC = $HOME . '/.gvimrc'
 endif
 let $DOTVIM = $HOME . '/.vim'
-let $NEOBUNDLE_DIR = $DOTVIM . '/bundle/'
+let $NEOBUNDLE_DIR = $DOTVIM . '/bundle'
 " If $DOTVIM/.private.vim is exists, ignore error.
 silent! source $DOTVIM/.private.vim
 
@@ -112,8 +112,8 @@ if g:at_startup
 endif
 call neobundle#rc()
 NeoBundleFetch 'Shougo/neobundle.vim'
-NeoBundle 'csv.vim'
-NeoBundle 'Shougo/vimproc', {
+
+NeoBundle 'Shougo/vimproc.vim', {
       \ 'build' : {
       \   'windows' : 'make -f make_mingw32.mak',
       \   'cygwin'  : 'make -f make_cygwin.mak',
@@ -140,9 +140,16 @@ NeoBundleLazy 'osyo-manga/unite-highlight', {'autoload' : {'unite_sources' : 'hi
 NeoBundleLazy 'tsukkee/unite-tag', {'autoload' : {'unite_sources' : 'tag'}}
 NeoBundleLazy 'tacroe/unite-mark', {'autoload' : {'unite_sources' : 'mark'}}
 NeoBundleLazy 'yomi322/unite-tweetvim', {'autoload' : {'unite_sources' : 'tweetvim'}}
-" NeoBundleLazy 'choplin/unite-vim_hacks', {'autoload' : {'unite_sources' : 'vim_hacks'}}
+NeoBundleLazy 'Shougo/unite-outline', {'autoload' : {'unite_sources' : 'outline'}}
+NeoBundleLazy 'rhysd/unite-n3337', {'autoload' : {'unite_sources' : 'n3337'}}
+let g:unite_n3337_txt = $DOTVIM . '/n3337.txt'
+NeoBundleLazy 'osyo-manga/unite-boost-online-doc', {
+      \ 'depends' : ['Shougo/unite.vim', 'tyru/open-browser.vim', 'mattn/webapi-vim'],
+      \ 'autoload' : {'unite_sources' : 'boost-online-doc'}
+      \}
 nnoremap [unite] <Nop>
 nmap ,u  [unite]
+noremap [unite]u :<C-u>Unite
 noremap <silent> [unite]a  :<C-u>Unite airline_themes -auto-preview -winheight=12<CR>
 noremap <silent> [unite]b  :<C-u>Unite buffer<CR>
 noremap <silent> [unite]c  :<C-u>Unite colorscheme -auto-preview<CR>
@@ -151,28 +158,36 @@ noremap <silent> [unite]f  :<C-u>Unite buffer file_rec/async:! file file_mru<CR>
 noremap <silent> [unite]F  :<C-u>Unite font -auto-preview<CR>
 noremap <silent> [unite]h  :<C-u>Unite highlight<CR>
 noremap <silent> [unite]m  :<C-u>Unite mark -auto-preview<CR>
+noremap <silent> [unite]o  :<C-u>Unite outline<CR>
 noremap <silent> [unite]r  :<C-u>Unite register<CR>
 noremap <silent> [unite]t  :<C-u>Unite tag<CR>
 noremap <silent> [unite]T  :<C-u>Unite tweetvim<CR>
-noremap [unite]u :<C-u>Unite
+
+autocmd MyAutoCmd FileType cpp  noremap  <buffer> <silent> [unite]n  :<C-u>Unite n3337<CR>
+autocmd MyAutoCmd FileType cpp  nnoremap <buffer> <Space>ub :<C-u>UniteWithCursorWord boost-online-doc
 
 NeoBundleLazy 'Shougo/vimfiler', {
       \ 'depends'  : 'Shougo/unite.vim',
       \ 'autoload' : {'commands' : 'VimFiler'}
       \}
 
-if has('lua') && v:version >= 703 && has('patch825')
+if has('lua') && (v:version > 703 || (v:version == 703 && has('patch885')))
   NeoBundleLazy 'Shougo/neocomplete.vim', {
         \ 'autoload' : {'insert' : 1}
         \}
-  inoremap <expr><CR>  neocomplete#smart_close_popup() . '<CR>'
+  " inoremap <expr><CR>  neocomplete#smart_close_popup() . '<CR>'
   let g:neocomplete#enable_at_startup = 1
 else
   NeoBundleLazy 'Shougo/neocomplcache', {
         \ 'autoload' : {'insert' : 1}
         \}
-  inoremap <expr><CR>  neocomplcache#smart_close_popup() . '<CR>'
+  " inoremap <expr><CR>  neocomplcache#smart_close_popup() . '<CR>'
   let g:neocomplcache_enable_at_startup = 1
+  let g:neocomplcache_force_overwrite_completefunc = 1
+  if !exists("g:neocomplcache_force_omni_patterns")
+    let g:neocomplcache_force_omni_patterns = {}
+  endif
+  let g:neocomplcache_force_omni_patterns.cpp = '[^.[:digit:] *\t]\%(\.\|->\)\|::'
 endif
 
 NeoBundleLazy 'Shougo/neosnippet', {
@@ -209,18 +224,16 @@ endfunction
 let s:is_ime = 0
 call s:toggle_ime()
 command! -bar ToggleIME  call s:toggle_ime()
-let g:eskk#start_completion_length = 2
-let g:eskk#marker_henkan = '»'
-let g:eskk#marker_okuri = '*'
-let g:eskk#marker_henkan_select = '«'
-let g:eskk#marker_jisyo_touroku = '?'
-let g:eskk#dictionary = {'path' : '~/.skk-jisyo', 'sorted' : 0, 'encoding' : 'utf-8'}
-let g:eskk#large_dictionary = {'path' : '~/.eskk/SKK-JISYO.L', 'sorted' : 1, 'encoding' : 'euc-jp'}
-let g:eskk_debug = 0
-let g:eskk_egg_like_newline = 1
-let g:eskk_revert_henkan_style = 'okuri'
-let g:eskk_enable_completion = 0
 
+let s:bundle = neobundle#get('eskk.vim')
+function! s:bundle.hooks.on_source(bundle)
+  source $DOTVIM/plugin-config/eskk.vim
+endfunction
+unlet s:bundle
+
+NeoBundleLazy "osyo-manga/vim-over", {
+      \ 'autoload' : {'commands' : 'OverCommandLine'}
+      \}
 " I want to show startup time when vim is started, so lazy-load this plug-in.
 NeoBundleLazy 'bling/vim-bufferline', {
       \ 'autoload' : {'insert' : 1}
@@ -251,14 +264,6 @@ NeoBundleLazy 'tyru/caw.vim', {
       \}
 nmap <Leader>c  <Plug>(caw:i:toggle)
 xmap <Leader>c  <Plug>(caw:i:toggle)
-" Clone of 'tpope/vim-endwise'.
-NeoBundleLazy 'rhysd/endwize.vim', {
-      \ 'autoload' : {
-      \   'filetypes' : ['lua', 'ruby', 'sh', 'zsh', 'vb', 'vbnet', 'aspvbs', 'vim'],
-      \}}
-" let g:endwize_add_info_filetypes = ['ruby', 'c', 'cpp']
-let g:endwise_no_mappings = 1
-autocmd MyAutoCmd FileType lua,ruby,sh,zsh,vb,vbnet,aspvbs,vim  imap <buffer> <silent><CR>  <CR><Plug>DiscretionaryEnd
 
 NeoBundleLazy 'tpope/vim-surround', {
       \ 'autoload' : {'mappings' : [
@@ -282,6 +287,15 @@ NeoBundleLazy 'kana/vim-altr', {
 nmap <Space>a  <Plug>(altr-forward)
 nmap <Space>A  <Plug>(altr-back)
 
+" Clone of 'tpope/vim-endwise'.
+NeoBundleLazy 'rhysd/endwize.vim', {
+      \ 'autoload' : {
+      \   'filetypes' : ['lua', 'ruby', 'sh', 'zsh', 'vb', 'vbnet', 'aspvbs', 'vim'],
+      \}}
+let g:endwize_add_info_filetypes = ['ruby', 'c', 'cpp']
+let g:endwise_no_mappings = 1
+autocmd MyAutoCmd FileType lua,ruby,sh,zsh,vb,vbnet,aspvbs,vim  imap <buffer> <silent><CR>  <CR><Plug>DiscretionaryEnd
+
 NeoBundleLazy 'kana/vim-smartinput', {
       \ 'autoload' : {'insert' : 1}
       \}
@@ -296,6 +310,15 @@ function! s:bundle.hooks.on_source(bundle)
 endfunction
 unlet s:bundle
 
+NeoBundleLazy 'AndrewRadev/switch.vim', {
+      \ 'autoload' : {'commands' : 'Switch'}
+      \}
+let s:bundle = neobundle#get('switch.vim')
+function! s:bundle.hooks.on_source(bundle)
+  source $DOTVIM/plugin-config/switch.vim
+endfunction
+unlet s:bundle
+nnoremap <silent> <Space>!  :<C-u>Switch<CR>
 
 """""" if executable('w3m')
 NeoBundleLazy 'yuratomo/w3m.vim', {
@@ -369,10 +392,18 @@ nnoremap <Leader>wj  :<C-u>Ref webdict wiki<Space>
 
 let s:bundle = neobundle#get('vim-ref')
 function! s:bundle.hooks.on_source(bundle)
-  source $DOTVIM/plugin-config/vim-ref.vim
+  source $DOTVIM/plugin-config/ref.vim
 endfunction
 unlet s:bundle
 """""" endif
+
+NeoBundleLazy 'mattn/excitetranslate-vim', {
+      \ 'depends': 'mattn/webapi-vim',
+      \ 'autoload' : {'commands' : 'ExciteTranslate'}
+      \}
+NeoBundle 'mattn/googletranslate-vim', {
+      \ 'autoload' : {'commands' : 'GoogleTranslate'}
+      \}
 
 NeoBundleLazy 'rhysd/tmpwin.vim', {
       \ 'autoload' : {'commands' : 'tmpwin#toggle'}
@@ -432,26 +463,26 @@ if g:is_windows && s:is_cui
   set guifont=Consolas:h9 guifontwide=MS_Gothic:h9
 endif
 
-if !g:is_cygwin
-  NeoBundle 'osyo-manga/vim-pronamachang', {
-        \ 'depends' : ['osyo-manga/vim-sound', 'Shougo/vimproc.vim']
-        \}
-  let g:pronamachang_voice_root = get(g:, 'pronamachang_voice_path', '')
-  let g:pronamachang_startup_voices = {
-        \ 'all'       : ['kei_voice_008_phrase2'],
-        \ 'morning'   : ['kei_voice_008_phrase1'],
-        \ 'afternoon' : ['kei_voice_009_phrase1'],
-        \ 'night'     : ['kei_voice_010_phrase1', 'kei_voice_010_phrase3'],
-        \}
-  let g:pronamachang_goodbye_voices = {
-        \ 'all'       : ['kei_voice_018_phrase1', 'kei_voice_086_phrase2'],
-        \ 'morning'   : ['kei_voice_030_phrase1'],
-        \ 'afternoon' : ['kei_voice_011_phrase2', 'kei_voice_030_phrase1'],
-        \ 'night'     : ['kei_voice_011_phrase1', 'kei_voice_011_phrase2', 'kei_voice_011_phrase3', 'kei_voice_017_phrase2'],
-        \}
-  let g:pronamachang_say_startup_enable = 1
-  let g:pronamachang_say_goodbye_enable = 1
-endif
+" if !g:is_cygwin
+  " NeoBundle 'osyo-manga/vim-pronamachang', {
+  "       \ 'depends' : ['osyo-manga/vim-sound', 'Shougo/vimproc.vim']
+  "       \}
+  " let g:pronamachang_voice_root = get(g:, 'pronamachang_voice_path', '')
+  " let g:pronamachang_startup_voices = {
+  "       \ 'all'       : ['kei_voice_008_phrase2'],
+  "       \ 'morning'   : ['kei_voice_008_phrase1'],
+  "       \ 'afternoon' : ['kei_voice_009_phrase1'],
+  "       \ 'night'     : ['kei_voice_010_phrase1', 'kei_voice_010_phrase3'],
+  "       \}
+  " let g:pronamachang_goodbye_voices = {
+  "       \ 'all'       : ['kei_voice_018_phrase1', 'kei_voice_086_phrase2'],
+  "       \ 'morning'   : ['kei_voice_030_phrase1'],
+  "       \ 'afternoon' : ['kei_voice_011_phrase2', 'kei_voice_030_phrase1'],
+  "       \ 'night'     : ['kei_voice_011_phrase1', 'kei_voice_011_phrase2', 'kei_voice_011_phrase3', 'kei_voice_017_phrase2'],
+  "       \}
+  " let g:pronamachang_say_startup_enable = 1
+  " let g:pronamachang_say_goodbye_enable = 1
+" endif
 
 NeoBundleLazy 'add20/vim-conque', {
       \ 'autoload' : {'commands' : 'ConqueTerm'}
@@ -473,13 +504,67 @@ unlet s:bundle
 
 """""" if executable('MSBuild.exe') || executable('xbuild')
 NeoBundleLazy 'nosami/Omnisharp', {
-      \ 'autoload' : {'filetypes' : ['cs']},
+      \ 'autoload' : {'filetypes' : 'cs'},
       \ 'build' : {
       \   'windows' : 'MSBuild.exe server/OmniSharp.sln /p:Platform="Any CPU"',
       \   'mac'     : 'xbuild server/OmniSharp.sln',
       \   'unix'    : 'xbuild server/OmniSharp.sln'
       \}}
 """"""
+
+""" C++ plugins
+"""""" if executable('clang')
+NeoBundleLazy 'rhysd/vim-clang-format', {
+      \ 'depends' : ['kana/vim-operator-user'],
+      \ 'autoload' : {
+      \   'commands' : ['ClangFormat', 'ClangFormatEchoFormattedCode'],
+      \   'mappings' : ['<Plug>(operator-clang-format)']
+      \}}
+map ,x  <Plug>(operator-clang-format)
+
+" NeoBundleLazy 'osyo-manga/vim-marching', {
+"       \ 'depends' : ['Shougo/vimproc.vim', 'osyo-manga/vim-reunions'],
+"       \ 'autoload' : {'filetypes' : ['c', 'cpp']}
+"       \}
+" let g:marching_clang_command = get(g:, 'clang_command', 'clang')
+" let g:marching_clang_command_option='-std=c++1y'
+" let g:marching_include_paths = [
+"       \ get(g:, 'g:cpp_include_files', 'clang')
+"       \]
+" imap <buffer> <C-x><C-o> <Plug>(marching_start_omni_complete)
+
+NeoBundleLazy 'Rip-Rip/clang_complete', {
+      \ 'autoload' : {'filetypes' : ['c', 'cpp']}
+      \}
+let g:clang_complete_auto = 0
+let g:clang_use_library = 1
+let g:clang_library_path = get(g:, 'clang_lib', 'clang')
+let g:clang_exec = '"' . get(g:, 'clang_command', 'clang')
+if g:is_windows
+  let g:clang_user_options = '2> NUL || exit 0"'
+else
+  let g:clang_user_options = '2> /dev/null || exit 0"'
+endif
+let g:clang_jumpto_declaration_key = '<Space>t'
+
+NeoBundleLazy 'rhysd/wandbox-vim', {
+      \ 'autoload' : {'commands' : 'Wandbox'}
+      \}
+let s:bundle = neobundle#get('wandbox-vim')
+function! s:bundle.hooks.on_source(bundle)
+  " Set default compilers for each filetype
+  let wandbox#default_compiler = {
+        \ 'cpp' : 'clang-head',
+        \ 'ruby' : 'ruby-1.9.3-p0',
+        \}
+  " Set default options for each filetype.  Type of value is string or list of string
+  let wandbox#default_options = {
+        \ 'cpp' : 'warning,optimize,boost-1.55',
+        \ 'haskell' : ['haskell-warning', 'haskell-optimize']
+        \}
+endfunction
+unlet s:bundle
+"""""" endif
 
 NeoBundleLazy 'tatt61880/kuin_vim', {
       \ 'autoload' : {'filetypes' : 'kuin'}
@@ -526,78 +611,22 @@ NeoBundleLazy 'thinca/vim-quickrun', {
       \}
 let s:bundle = neobundle#get('vim-quickrun')
 function! s:bundle.hooks.on_source(bundle)
-  let g:quickrun_config = {
-        \ '_' : {
-        \   'outputter' : 'buffer',
-        \   'outputter/buffer/split' : ':botright',
-        \   'runner' : 'vimproc',
-        \   'outputter/buffer/close_on_empty' : 1,
-        \   'runner/vimproc/updatetime' : 60
-        \ },
-        \ 'c'      : {'type' : 'my_c'},
-        \ 'cpp'    : {'type' : 'my_cpp'},
-        \ 'cs'     : {'type' : 'my_cs'},
-        \ 'java'   : {'type' : 'my_java'},
-        \ 'lisp'   : {'type' : 'my_lisp'},
-        \ 'scheme' : {'type' : 'my_scheme'},
-        \ 'python' : {'type' : 'my_python'},
-        \ 'ruby'   : {'type' : 'my_ruby'},
-        \ 'r'      : {'type' : 'my_r'},
-        \ 'tex'    : {'type' : 'my_tex'},
-        \ 'kuin' : {
-        \   'command' : 'Kuin.exe',
-        \   'cmdopt'  : '-nw',
-        \   'exec'    : '%C %S %o',
-        \ }, 'html' : {
-        \   'command'   : 'cat',
-        \   'outputter' : 'browser',
-        \ },
-        \ 'my_c' : {
-        \   'command' : 'gcc',
-        \   'cmdopt'  : '-Wall -Wextra -fsyntax-only',
-        \   'exec'    : '%C %o %S',
-        \ }, 'my_cpp' : {
-        \   'command' : 'g++',
-        \   'cmdopt'  : '-Wall -Wextra -fsyntax-only',
-        \   'exec'    : '%C %o %S',
-        \ }, 'my_cs' : {
-        \   'command' : 'csc',
-        \   'cmdopt'  : '/out:csOut.exe',
-        \   'exec'    : '%C %o %S',
-        \ }, 'my_java' : {
-        \   'command' : 'javac',
-        \   'exec'    : '%C %S',
-        \ }, 'my_lisp' : {
-        \   'command' : 'clisp',
-        \   'exec'    : '%C %S',
-        \ }, 'my_scheme' : {
-        \   'command' : 'gosh',
-        \   'exec'    : '%C %S',
-        \ }, 'my_python' : {
-        \   'command' : 'python',
-        \   'exec'    : '%C %S',
-        \ }, 'my_ruby' : {
-        \   'command' : 'ruby',
-        \   'exec'    : '%C %S',
-        \ }, 'my_r' : {
-        \   'command' : 'Rscript',
-        \   'exec'    : '%C %S',
-        \ }, 'my_tex' : {
-        \   'command' : 'pdflatex',
-        \   'exec'    : '%C %S',
-        \}}
-  nnoremap <Leader>r  :<C-u>QuickRun -exec '%C %S'<CR>
+  source $DOTVIM/plugin-config/quickrun.vim
 endfunction
 unlet s:bundle
 
 NeoBundleLazy 'lambdalisue/platex.vim', {
       \ 'autoload' : {'filetypes' : 'tex'}
       \}
+let g:platex_suite_main_file = 'graduationthesis'
+let g:platex_suite_latex_compiler = 'C:/w32tex/bin/platex.exe'
+let g:platex_suite_bibtex_compiler = 'C:/w32tex/bin/pbibtex.exe'
+let g:platex_suite_dvipdf_compiler = 'C:/w32tex/bin/dvipdfmx.exe'
 
-NeoBundleLazy 'davidhalter/jedi-vim', {
-      \ 'autoload' : {
-      \   'filetypes' : ['python']
-      \}}
+" NeoBundleLazy 'davidhalter/jedi-vim', {
+"       \ 'autoload' : {
+"       \   'filetypes' : ['python']
+"       \}}
 
 NeoBundleLazy 'klen/python-mode', {
       \ 'autoload' : {'filetypes' : 'python'}
@@ -675,15 +704,42 @@ NeoBundleLazy 'koturn/benchvimrc-vim', {
 NeoBundleLazy 'thinca/vim-scouter', {
       \ 'autoload' : {'commands' : [{'name' : 'Scouter', 'complete' : 'file'}]}
       \}
+NeoBundleLazy 'koturn/vim-cloud-speech-synthesizer', {
+      \ 'depends' : ['mattn/webapi-vim', 'Shougo/vimproc.vim', 'osyo-manga/vim-sound'],
+      \ 'autoload' : {'commands' : 'CloudSpeechSynthesize'}
+      \}
+" Work with clipboard.
+NeoBundleLazy 'koturn/vim-clipboard', {
+      \ 'autoload' : {'commands' : ['GetClip', 'PutClip']}
+      \}
+nnoremap <silent> ,<Space>  :<C-u>PutClip<CR>
+nnoremap <silent> <Space>,  :<C-u>GetClip<CR>
+if has('clipboard')
+  if has('unnamedplus')
+    set clipboard=unnamedplus,autoselect
+    let g:clipboard#clip_register = '@+'
+    cnoremap <M-P>  <C-r>+
+    vnoremap <M-P>  "+p
+  else
+    set clipboard=unnamed,autoselect
+    cnoremap <M-P>  <C-r>*
+    vnoremap <M-P>  "*p
+  endif
+endif
+
 
 " In windows, not to use cygwin-git.
 if g:is_windows
   let s:win_git_path = get(g:, 'win_git_path', '')
   if s:win_git_path != ''
-    let $PATH = g:win_git_path . ';' . $PATH
+    " let $PATH = g:win_git_path . ';' . $PATH
   endif
   unlet s:win_git_path
 endif
+
+NeoBundleLazy 'mattn/gist-vim', {
+      \ 'autoload' : {'commands' : ['Gist']}
+      \}
 NeoBundle 'tpope/vim-fugitive'
 
 NeoBundleLazy 'tyru/open-browser.vim', {
@@ -715,6 +771,12 @@ let g:tweetvim_display_time   = 1
 " Show icon.(require ImageMagick)
 " let g:tweetvim_display_icon = 1
 
+if g:is_windows
+  NeoBundleLazy 'koron/chalice', {
+        \ 'autoload' : {'commands' : 'Chalice'}
+        \}
+endif
+
 " require fbconsole.py
 "   $ pip install fbconsole
 NeoBundleLazy 'daisuzu/facebook.vim', {
@@ -725,7 +787,18 @@ NeoBundleLazy 'daisuzu/facebook.vim', {
 NeoBundleLazy 'tsukkee/lingr-vim', {
       \ 'autoload' : {'commands' : 'LingrLaunch'}
       \}
-
+NeoBundleLazy 'rbtnn/puyo.vim', {
+      \ 'autoload' : {'commands' : 'Puyo'}
+      \}
+NeoBundleLazy 'yuratomo/weather.vim', {
+      \ 'autoload' : {'commands' : 'Weather'}
+      \}
+NeoBundleLazy 'mattn/calendar-vim', {
+      \ 'autoload' : {'commands' : ['Calendar', 'CalendarH', 'CalendarT']}
+      \}
+NeoBundleLazy 'gregsexton/VimCalc', {
+      \ 'autoload' : {'commands' : 'Calc'}
+      \}
 NeoBundleLazy 'LeafCage/vimhelpgenerator', {
       \ 'autoload' : {'commands' : 'VimHelpGenerator'}
       \}
@@ -737,9 +810,17 @@ let g:vimhelpgenerator_contents = {
       \ 'variables': 1, 'commands': 1, 'key-mappings': 1, 'functions': 1,
       \ 'setting': 0, 'todo': 1, 'changelog': 0
       \}
+NeoBundleLazy 'mattn/startmenu-vim', {
+      \ 'depends' : ['mattn/webapi-vim', 'kien/ctrlp.vim', 'Shougo/unite.vim'],
+      \ 'autoload' : {'commands' : 'StartMenu'}
+      \}
+let g:startmenu_interface = 'unite'
+
+" NeoBundle 'mattn/webapi-vim'
+" NeoBundle 'ynkdir/vim-funlib'
 " }}}
 " ************** The end of setting of NeoBundle **************
-" NeoBundle 'nablaa/vim-rainbow-parenthesis'
+
 
 " ------------------------------------------------------------
 " Basic settings {{{
@@ -749,6 +830,7 @@ source $VIMRUNTIME/macros/matchit.vim
 let g:hl_matchit_enable_on_vim_startup = 1
 let g:hl_matchit_speed_level = 1
 let g:hl_matchit_allow_ft_regexp = 'html\|vim\|sh'
+set helplang=ja
 " Hide splash screen.
 set shortmess+=I
 " Enable to use '/' for direstory path separator on Windows.
@@ -790,37 +872,32 @@ set viminfo=
 set colorcolumn=80
 " Open buffer which already exists instead of opening new.
 set switchbuf=useopen
+" Settng for C-a adding and C-x subtracting.
+set nrformats=alpha,octal,hex
 " Indent settings
 set autoindent   smartindent
 set expandtab    smarttab
 set shiftwidth=2 tabstop=2 softtabstop=2
 " Show line number.
 set number
+" Setting for grep
+if executable('ag')
+  set grepprg=ag\ --nogroup\ -iS
+  set grepformat=%f:%l:%m
+elseif executable('ack')
+  set grepprg=ack\ --nogroup
+  set grepformat=%f:%l:%m
+elseif executable('grep')
+  set grepprg=grep\ -Hnd\ skip\ -r
+  set grepformat=%f:%l:%m,%f:%l%m,%f\ \ %l%m
+else
+  set grepprg=internal
+endif
 " Setting for printing.
 if has('printer') && g:is_windows
   set printoptions=number:y,header:0,syntax:y,left:5pt,right:5pt,top:10pt,bottom:10pt
   set printfont=Consolas:h8 printmbfont=r:MS_Gothic:h8,a:yes
 endif
-" Work with clipboard.
-NeoBundleLazy 'koturn/vim-clipboard', {
-      \ 'autoload' : {'commands' : ['GetClip', 'PutClip']}
-      \}
-nnoremap <silent> ,<Space>  :<C-u>PutClip<CR>
-nnoremap <silent> <Space>,  :<C-u>GetClip<CR>
-if has('clipboard')
-  if has('unnamedplus')
-    set clipboard=unnamedplus,autoselect
-    let g:clipboard#clip_register = '@+'
-    cnoremap <M-P>  <C-r>+
-    vnoremap <M-P>  "+p
-  else
-    set clipboard=unnamed,autoselect
-    cnoremap <M-P>  <C-r>*
-    vnoremap <M-P>  "*p
-  endif
-endif
-
-
 
 
 " ------------------------------------------------------------
@@ -858,6 +935,7 @@ if filereadable($HOME . '/.vimrc') && filereadable($HOME . '/.ViMrC')
 else
   set tags=./tags
 endif
+set tags+=../tags,../../tags
 
 " In Windows, if $VIM is not include in $PATH, .exe cannot be found.
 if g:is_windows && $PATH !~? '\(^\|;\)' . escape($VIM, '\\') . '\(;\|$\)'
@@ -1110,17 +1188,6 @@ xnoremap ,R  :<C-u>call <SID>store_selected_text(1)<CR>:<C-u>.,$s/\v<C-r>"//gc<L
 xnoremap ,s  :<C-u>call <SID>store_selected_text(0)<CR>/<C-u><C-r>"<CR>N
 xnoremap ,S  :<C-u>call <SID>store_selected_text(1)<CR>/<C-u>\v<C-r>"<CR>N
 
-" Execute current s-expr
-function! s:exec_s_expr()
-  normal [(v%y
-  " let l:s_expr = substitute(s:get_selected_text(), '[\r\n]', '', 'g')
-  let l:s_expr = substitute(@0, '[\r\n]', '', 'g')
-  " echomsg l:s_expr
-  split +enew
-  exec 'r !gosh -e "' . l:s_expr . '"'
-endfunction
-noremap  <silent> <F6>  :<C-u>call <SID>exec_s_expr()<CR>
-noremap! <silent> <F6>  <Esc>:call <SID>exec_s_expr()<CR>
 
 " Complete HTML tag
 function! s:complete_tag()
@@ -1216,6 +1283,38 @@ command! -bar ToggleCursorHighlight
       \ | endif
 nnoremap <silent> <Leader>h  :<C-u>ToggleCursorHighlight<CR>
 
+" Search in selected texts
+function! s:rangeSearch(d)
+  let l:s = input(a:d)
+  if strlen(l:s) > 0
+    let l:s = a:d . '\%V' . l:s . "\<CR>"
+    call feedkeys(l:s, 'n')
+  endif
+endfunction
+vnoremap <silent>/  :<C-u>call <SID>rangeSearch('/')<CR>
+vnoremap <silent>?  :<C-u>call <SID>rangeSearch('?')<CR>
+
+
+function! s:speedUp(is_bang)
+  if a:is_bang
+    setl noshowmatch nocursorline nocursorcolumn colorcolumn=
+  else
+    set  noshowmatch nocursorline nocursorcolumn colorcolumn=
+  endif
+  NoMatchParen
+  set laststatus=0 showtabline=0
+  if !s:is_cui
+    set guicursor=a:blinkon0
+    if has('kaoriya')
+      if g:is_windows
+        set transparency=255
+      elseif
+        set transparency=0
+      endif
+    endif
+  endif
+endfunction
+command! -bang -bar SpeedUp  call s:speedUp(<bang>0)
 
 function! s:delte_trailing_whitespace()
   let l:cursor = getpos('.')
@@ -1224,6 +1323,8 @@ function! s:delte_trailing_whitespace()
 endfunction
 command! -bar DeleteTrailingWhitespace  call s:delte_trailing_whitespace()
 command! -bar DeleteBlankLines  :g /^$/d
+command! -bar Rot13  normal mzggg?G`z
+
 
 " Reopen current file with another encoding.
 command! -bang -bar Utf8       edit<bang> ++enc=utf-8
@@ -1254,8 +1355,10 @@ command! -bar GC  call garbagecollect()
 " Show invisible characters and define format of the characters.
 if &enc ==# 'utf-8'
   set list listchars=eol:↓,extends:»,nbsp:%,precedes:«,tab:»-,trail:-
+  set showbreak=»
 else
   set list listchars=eol:$,extends:>,nbsp:%,precedes:<,tab:>-,trail:-
+  set showbreak=>
 endif
 augroup MyAutoCmd
   au ColorScheme * hi WhitespaceEOL term=underline ctermbg=Blue guibg=Blue
@@ -1294,11 +1397,14 @@ augroup MyAutoCmd
   " ----------------------------------------------------------
   " Setting for indent.
   " ----------------------------------------------------------
-  au Filetype cs     setl sw=4 ts=4 sts=4 noexpandtab
-  au Filetype java   setl sw=4 ts=4 sts=4 noexpandtab
-  au Filetype kuin   setl sw=2 ts=2 sts=2 noexpandtab
-  au Filetype python setl sw=4 ts=4 sts=4
-  au Filetype make   setl sw=4 ts=4 sts=4 noexpandtab
+  au Filetype c          setl                      cindent cinoptions+=g0,N-s cinkeys-=0#
+  au Filetype cpp        setl                      cindent cinoptions+=g0,N-s cinkeys-=0#
+  au Filetype cs         setl sw=4 ts=4 sts=4 noet
+  au Filetype java       setl sw=4 ts=4 sts=4 noet cindent cinoptions+=j1
+  au Filetype javascript setl sw=2 ts=2 sts=2      cindent cinoptions+=j1,J1,(s
+  au Filetype kuin       setl sw=2 ts=2 sts=2 noet
+  au Filetype python     setl sw=4 ts=4 sts=4
+  au Filetype make       setl sw=4 ts=4 sts=4 noet
 
   " ----------------------------------------------------------
   " Setting for template files.
@@ -1355,8 +1461,14 @@ if s:is_cui && &t_Co < 16
   endfunction
 else
   " NeoBundle 'itchyny/lightline.vim'
-  NeoBundle 'bling/vim-airline'
   let g:airline_theme = 'solarized'
+  let g:airline#extensions#tabline#enabled = 1
+  let g:airline#extensions#tabline#show_buffers = 0
+  let g:airline#extensions#tabline#tab_nr_type = 1
+  let g:airline#extensions#tabline#fnamemod = ':t'
+  " let g:airline#extensions#tabline#left_sep = ' '
+  " let g:airline#extensions#tabline#left_alt_sep = '|'
+  NeoBundle 'bling/vim-airline'
 endif
 " }}}
 
@@ -1404,6 +1516,11 @@ nnoremap j   gj
 nnoremap k   gk
 nnoremap gj   j
 nnoremap gk   k
+" Tag jump
+nnoremap <C-]>   g<C-]>zz
+nnoremap g<C-]>  <C-]>zz
+nnoremap <M-]>   :<C-u>tag<CR>
+nnoremap <M-[>   :<C-u>pop<CR>
 " For vimgrep
 nnoremap [q  :<C-u>cprevious<CR>
 nnoremap ]q  :<C-u>cnext<CR>
@@ -1426,21 +1543,20 @@ nnoremap <silent> <M->>   <C-w>>
 " Change tab.
 nnoremap <C-Tab>    gt
 nnoremap <S-C-Tab>  Gt
-" Tag jump
-nnoremap <C-]>  <C-]>zz
 " Show ascii-code of charactor under cursor.
 nnoremap <Space>@  :<C-u>ascii<CR>
 " Show registers
 nnoremap <Space>r  :<C-u>registers<CR>
+nnoremap <Leader>/  /<C-u>\<\><Left><Left>
 
 
 " Move to indented position.
 inoremap <C-A>  a<Esc>==xa
 " Cursor-move setting at insert-mode.
-" inoremap <C-h>  <Left>
-" inoremap <C-j>  <Down>
-" inoremap <C-k>  <Up>
-" inoremap <C-l>  <Right>
+inoremap <M-h>  <Left>
+inoremap <M-j>  <Down>
+inoremap <M-k>  <Up>
+inoremap <M-l>  <Right>
 " Like Emacs.
 inoremap <C-f>  <Right>
 inoremap <C-b>  <Left>
@@ -1449,7 +1565,8 @@ inoremap <silent> <C-e>  <Esc>$a
 " Insert a blank line in insert mode.
 inoremap <C-o>  <Esc>o
 " Easy <Esc> in insert-mode.
-inoremap jj  <Esc>
+" inoremap jj  <Esc>
+inoremap <expr> j  getline('.')[col('.') - 2] ==# 'j' ? "\<BS>\<ESC>" : 'j'
 " No wait for <Esc>.
 if g:is_unix && s:is_cui
   inoremap <silent> <ESC>  <ESC>
@@ -1530,9 +1647,6 @@ endif
 noremap  <silent> <S-F12> :<C-u>source %<CR>
 noremap! <silent> <S-F12> <Esc>:source %<CR>
 
-noremap  <silent> <F7> :<C-u>edit $DOTVIM/template/template.cc<CR>
-noremap! <silent> <F7> <Esc>:edit $DOTVIM/template/template.cc<CR>
-
 
 
 
@@ -1600,6 +1714,9 @@ inoremap <BS> <Esc>:call <SID>echo_keymsg(5)<CR>a
 " ------------------------------------------------------------
 " END of .vimrc {{{
 " ------------------------------------------------------------
+if !g:at_startup && s:is_cui
+  call neobundle#call_hook('on_source')
+endif
 if s:is_cui
   colorscheme koturn
   filetype plugin indent on
